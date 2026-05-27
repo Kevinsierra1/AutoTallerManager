@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: autotaller_postgres
+    environment:
+      POSTGRES_DB: AutoTallerManager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Admin@123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autotaller_net
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: autotaller_api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=AutoTallerManager;Username=postgres;Password=Admin@123
+      - JwtSettings__SecretKey=SuperSecretKeyForAutoTallerManager2024!
+      - JwtSettings__Issuer=AutoTallerManager
+      - JwtSettings__Audience=AutoTallerManagerUsers
+      - JwtSettings__ExpirationMinutes=60
+    ports:
+      - "5000:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - autotaller_net
+
+  console:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.console
+    container_name: autotaller_console
+    environment:
+      - ApiSettings__BaseUrl=http://api/
+    depends_on:
+      - api
+    networks:
+      - autotaller_net
+    stdin_open: true
+    tty: true
+
+volumes:
+  pgdata:
+
+networks:
+  autotaller_net:
+    driver: bridge

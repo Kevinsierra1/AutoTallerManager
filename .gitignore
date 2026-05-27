@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+.vscode/
+*.suo
+*.userprefs
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Docker volumes
+pgdata/
+
+# Environment
+.env
+*.env.local
+
+# Published output
+publish/
