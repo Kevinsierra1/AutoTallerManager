@@ -1,9 +1,0 @@
-namespace AutoTallerManager.Domain.Entities;
-
-public class UsuarioRol
-{
-    public Guid UsuarioId { get; set; }
-    public Usuario Usuario { get; set; } = null!;
-    public Guid RolId { get; set; }
-    public Rol Rol { get; set; } = null!;
-}
