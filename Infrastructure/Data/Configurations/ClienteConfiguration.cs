@@ -9,6 +9,13 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
     public void Configure(EntityTypeBuilder<Cliente> builder)
     {
         builder.HasKey(c => c.Id);
+
+        // Número secuencial amigable: PostgreSQL lo genera automáticamente (1, 2, 3…)
+        builder.Property(c => c.Numero)
+               .UseIdentityAlwaysColumn()   // GENERATED ALWAYS AS IDENTITY en PostgreSQL
+               .ValueGeneratedOnAdd();
+        builder.HasIndex(c => c.Numero).IsUnique();
+
         builder.Property(c => c.Nombres).IsRequired().HasMaxLength(100);
         builder.Property(c => c.Apellidos).IsRequired().HasMaxLength(100);
         builder.Property(c => c.NumeroDocumento).IsRequired().HasMaxLength(20);

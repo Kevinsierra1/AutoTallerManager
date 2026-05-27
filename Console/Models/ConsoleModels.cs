@@ -43,6 +43,7 @@ public class AuthResponse
 public class ClienteModel
 {
     public Guid Id { get; set; }
+    public int Numero { get; set; }
     public string Nombres { get; set; } = "";
     public string Apellidos { get; set; } = "";
     public string TipoDocumento { get; set; } = "";
@@ -76,6 +77,30 @@ public class VehiculoModel
     public DateTime CreadoEn { get; set; }
 
     public string MarcaModelo => $"{Marca} {Modelo}".Trim();
+}
+
+// ─── Catálogos ───────────────────────────────────────────────────────────────
+
+public class CatalogoItem
+{
+    public Guid Id { get; set; }
+    public string Nombre { get; set; } = "";
+}
+
+public class ModeloItem
+{
+    public Guid Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public Guid MarcaId { get; set; }
+    public string MarcaNombre { get; set; } = "";
+    public string Display => $"{MarcaNombre} {Nombre}";
+}
+
+public class ColorItem
+{
+    public Guid Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string? CodigoHex { get; set; }
 }
 
 // ─── Órdenes ─────────────────────────────────────────────────────────────────

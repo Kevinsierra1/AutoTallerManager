@@ -46,32 +46,32 @@ public abstract class BaseMenu
 
     protected static string Ask(string prompt, string? defaultValue = null)
     {
-        var p = new TextPrompt<string>($"[cyan]  {prompt}[/]").AllowEmpty();
+        var p = new TextPrompt<string>($"[cyan]  {Markup.Escape(prompt)}[/]").AllowEmpty();
         if (defaultValue != null) p.DefaultValue(defaultValue);
         return AnsiConsole.Prompt(p);
     }
 
     protected static string AskRequired(string prompt)
     {
-        return AnsiConsole.Prompt(new TextPrompt<string>($"[cyan]  {prompt}[/]"));
+        return AnsiConsole.Prompt(new TextPrompt<string>($"[cyan]  {Markup.Escape(prompt)}[/]"));
     }
 
     protected static int AskInt(string prompt, int defaultValue = 0)
     {
         return AnsiConsole.Prompt(
-            new TextPrompt<int>($"[cyan]  {prompt}[/]")
+            new TextPrompt<int>($"[cyan]  {Markup.Escape(prompt)}[/]")
                 .DefaultValue(defaultValue));
     }
 
     protected static decimal AskDecimal(string prompt, decimal defaultValue = 0)
     {
         return AnsiConsole.Prompt(
-            new TextPrompt<decimal>($"[cyan]  {prompt}[/]")
+            new TextPrompt<decimal>($"[cyan]  {Markup.Escape(prompt)}[/]")
                 .DefaultValue(defaultValue));
     }
 
     protected static bool Confirm(string prompt) =>
-        AnsiConsole.Confirm($"[yellow]  {prompt}[/]", false);
+        AnsiConsole.Confirm($"[yellow]  {Markup.Escape(prompt)}[/]", false);
 
     protected static string Choice(string title, params string[] choices)
     {

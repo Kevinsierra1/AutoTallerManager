@@ -147,7 +147,11 @@ public class InventarioMenu : BaseMenu
             });
         });
 
-        if (created != null) Ok($"Repuesto '[bold]{Markup.Escape(created.Nombre)}[/]' creado. Stock: {created.StockActual}");
+        if (created != null)
+        {
+            Ok($"Repuesto [bold]{Markup.Escape(created.Nombre)}[/] creado. Stock inicial: {created.StockActual}");
+            AnsiConsole.MarkupLine($"[grey]  ID asignado:[/] [cyan]{created.Id}[/]");
+        }
         else Error("No se pudo crear el repuesto.");
         Pause();
     }

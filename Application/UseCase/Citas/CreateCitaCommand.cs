@@ -22,6 +22,8 @@ public class CreateCitaCommandHandler : IRequestHandler<CreateCitaCommand, CitaD
     public async Task<CitaDto> Handle(CreateCitaCommand request, CancellationToken cancellationToken)
     {
         var cita = _mapper.Map<Cita>(request.Dto);
+        cita.Id = Guid.NewGuid();
+        cita.CreadoEn = DateTime.UtcNow;
         cita.Estado = EstadoCitaEnum.Pendiente;
         _context.Citas.Add(cita);
         await _context.SaveChangesAsync(cancellationToken);

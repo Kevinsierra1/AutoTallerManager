@@ -2,6 +2,9 @@ namespace Domain.Entities;
 
 public class Cliente : BaseEntity
 {
+    /// <summary>Número secuencial amigable (1, 2, 3…). Generado automáticamente por PostgreSQL.</summary>
+    public int Numero { get; set; }
+
     public string Nombres { get; set; } = string.Empty;
     public string Apellidos { get; set; } = string.Empty;
     public Guid? TipoDocumentoId { get; set; }

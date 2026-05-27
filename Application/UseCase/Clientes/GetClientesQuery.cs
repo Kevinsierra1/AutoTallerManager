@@ -25,7 +25,13 @@ public class GetClientesQueryHandler : IRequestHandler<GetClientesQuery, PagedRe
         var q = _context.Clientes.AsQueryable();
         var f = request.Filtro;
         if (!string.IsNullOrWhiteSpace(f.Busqueda))
-            q = q.Where(c => c.Nombres.Contains(f.Busqueda) || c.Apellidos.Contains(f.Busqueda) || c.NumeroDocumento.Contains(f.Busqueda));
+        {
+            var busqueda = f.Busqueda.TrimStart('#');
+            if (int.TryParse(busqueda, out var numero))
+                q = q.Where(c => c.Numero == numero || c.Nombres.Contains(f.Busqueda) || c.Apellidos.Contains(f.Busqueda) || c.NumeroDocumento.Contains(f.Busqueda));
+            else
+                q = q.Where(c => c.Nombres.Contains(f.Busqueda) || c.Apellidos.Contains(f.Busqueda) || c.NumeroDocumento.Contains(f.Busqueda));
+        }
         if (!string.IsNullOrWhiteSpace(f.TipoDocumento))
             q = q.Where(c => c.TipoDocumento != null && c.TipoDocumento.Nombre == f.TipoDocumento);
         return await q.ProjectTo<ClienteDto>(_mapper.ConfigurationProvider).ToPagedResultAsync(f.PageNumber, f.PageSize, cancellationToken);

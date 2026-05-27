@@ -21,6 +21,8 @@ public class CreateVehiculoCommandHandler : IRequestHandler<CreateVehiculoComman
     public async Task<VehiculoDto> Handle(CreateVehiculoCommand request, CancellationToken cancellationToken)
     {
         var vehiculo = _mapper.Map<Vehiculo>(request.Dto);
+        vehiculo.Id = Guid.NewGuid();
+        vehiculo.CreadoEn = DateTime.UtcNow;
         vehiculo.Activo = true;
         _context.Vehiculos.Add(vehiculo);
         await _context.SaveChangesAsync(cancellationToken);

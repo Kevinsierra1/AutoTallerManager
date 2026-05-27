@@ -21,6 +21,8 @@ public class CreateRepuestoCommandHandler : IRequestHandler<CreateRepuestoComman
     public async Task<RepuestoDto> Handle(CreateRepuestoCommand request, CancellationToken cancellationToken)
     {
         var repuesto = _mapper.Map<Repuesto>(request.Dto);
+        repuesto.Id = Guid.NewGuid();
+        repuesto.CreadoEn = DateTime.UtcNow;
         repuesto.Activo = true;
         _context.Repuestos.Add(repuesto);
         await _context.SaveChangesAsync(cancellationToken);

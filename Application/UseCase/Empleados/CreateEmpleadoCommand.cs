@@ -21,6 +21,8 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
     public async Task<EmpleadoDto> Handle(CreateEmpleadoCommand request, CancellationToken cancellationToken)
     {
         var empleado = _mapper.Map<Empleado>(request.Dto);
+        empleado.Id = Guid.NewGuid();
+        empleado.CreadoEn = DateTime.UtcNow;
         empleado.Activo = true;
         _context.Empleados.Add(empleado);
         await _context.SaveChangesAsync(cancellationToken);

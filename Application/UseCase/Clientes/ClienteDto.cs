@@ -2,6 +2,7 @@ namespace Application.UseCase.Clientes;
 
 public record ClienteDto(
     Guid Id,
+    int Numero,
     string Nombres,
     string Apellidos,
     string TipoDocumento,

@@ -6,6 +6,7 @@ using Infrastructure.Data.Seeders;
 using Api.Helpers.Errors;
 using Api.Extensions;
 using AspNetCoreRateLimit;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 

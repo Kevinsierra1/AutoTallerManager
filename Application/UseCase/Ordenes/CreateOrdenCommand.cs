@@ -22,6 +22,8 @@ public class CreateOrdenCommandHandler : IRequestHandler<CreateOrdenCommand, Ord
     public async Task<OrdenServicioDto> Handle(CreateOrdenCommand request, CancellationToken cancellationToken)
     {
         var orden = _mapper.Map<OrdenServicio>(request.Dto);
+        orden.Id = Guid.NewGuid();          // explícito: FK del historial lo usa inmediatamente
+        orden.CreadoEn = DateTime.UtcNow;
         orden.NumeroOrden = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
         orden.Estado = EstadoOrdenEnum.Pendiente;
         orden.FechaIngreso = DateTime.UtcNow;

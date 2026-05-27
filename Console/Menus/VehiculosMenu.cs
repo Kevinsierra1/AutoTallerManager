@@ -86,32 +86,67 @@ public class VehiculosMenu : BaseMenu
     {
         PrintHeader("Registrar Vehículo");
 
-        // Modelos de vehículo del seed (fijos)
-        var marcasModelos = new Dictionary<string, (string marcaNombre, List<(string id, string nombre)> modelos)>
-        {
-            // Usaremos GUIDs conocidos del seed o dejaremos al usuario escribirlos
-            // Como no hay endpoint de catálogos, mostramos una selección básica
-        };
-
         var placa = AskRequired("Placa (ej: ABC123):").ToUpper();
 
-        AnsiConsole.WriteLine();
-        Info("Nota: Para ModeloVehiculoId y ColorId usa los GUIDs de la base de datos.");
-        Info("Puedes consultarlos en Swagger: GET /api/Vehiculos y ver los existentes.");
-        AnsiConsole.WriteLine();
+        // ── Seleccionar Marca ─────────────────────────────────────────────────
+        List<CatalogoItem>? marcas = null;
+        await WithSpinner("Cargando marcas", async () => { marcas = await Api.GetMarcasAsync(); });
 
-        var modeloIdStr = AskRequired("ModeloVehiculoId (GUID):");
-        if (!Guid.TryParse(modeloIdStr, out var modeloId)) { Error("GUID inválido."); Pause(); return; }
+        if (marcas == null || marcas.Count == 0) { Error("No hay marcas registradas en el sistema."); Pause(); return; }
 
-        var colorIdStr = Ask("ColorId (GUID, opcional):");
+        var marcaSel = AnsiConsole.Prompt(
+            new SelectionPrompt<CatalogoItem>()
+                .Title("[cyan]  Selecciona la marca:[/]")
+                .PageSize(12)
+                .HighlightStyle(new Style(Color.Cyan1))
+                .UseConverter(m => m.Nombre)
+                .AddChoices(marcas));
+
+        // ── Seleccionar Modelo (filtrado por marca) ────────────────────────────
+        List<ModeloItem>? modelos = null;
+        await WithSpinner($"Cargando modelos de {marcaSel.Nombre}", async () =>
+        {
+            modelos = await Api.GetModelosAsync(marcaSel.Id);
+        });
+
+        if (modelos == null || modelos.Count == 0) { Error($"No hay modelos para la marca {marcaSel.Nombre}."); Pause(); return; }
+
+        var modeloSel = AnsiConsole.Prompt(
+            new SelectionPrompt<ModeloItem>()
+                .Title("[cyan]  Selecciona el modelo:[/]")
+                .PageSize(12)
+                .HighlightStyle(new Style(Color.Cyan1))
+                .UseConverter(m => m.Nombre)
+                .AddChoices(modelos));
+
+        // ── Seleccionar Color (opcional) ──────────────────────────────────────
+        List<ColorItem>? colores = null;
+        await WithSpinner("Cargando colores", async () => { colores = await Api.GetColoresAsync(); });
+
         Guid? colorId = null;
-        if (!string.IsNullOrEmpty(colorIdStr) && Guid.TryParse(colorIdStr, out var cid)) colorId = cid;
+        if (colores != null && colores.Count > 0)
+        {
+            var opcionesColor = colores.Select(c => c.Nombre).ToList();
+            opcionesColor.Insert(0, "Sin color / No especificar");
 
+            var colorSel = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[cyan]  Selecciona el color:[/]")
+                    .PageSize(14)
+                    .HighlightStyle(new Style(Color.Cyan1))
+                    .AddChoices(opcionesColor));
+
+            if (colorSel != "Sin color / No especificar")
+                colorId = colores.First(c => c.Nombre == colorSel).Id;
+        }
+
+        // ── Datos adicionales ─────────────────────────────────────────────────
         var anio = AskInt("Año:", DateTime.Now.Year);
         var vin  = Ask("VIN (opcional):");
         var obs  = Ask("Observaciones (opcional):");
 
         AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"[grey]  Resumen:[/] [bold]{Markup.Escape(placa)}[/] — {Markup.Escape(marcaSel.Nombre)} {Markup.Escape(modeloSel.Nombre)} {anio}");
         if (!Confirm("¿Registrar este vehículo?")) return;
 
         VehiculoModel? created = null;
@@ -121,7 +156,7 @@ public class VehiculosMenu : BaseMenu
             {
                 Placa = placa,
                 Vin = string.IsNullOrEmpty(vin) ? null : vin,
-                ModeloVehiculoId = modeloId,
+                ModeloVehiculoId = modeloSel.Id,
                 ColorId = colorId,
                 Anio = anio,
                 Observaciones = string.IsNullOrEmpty(obs) ? null : obs
@@ -129,9 +164,12 @@ public class VehiculosMenu : BaseMenu
         });
 
         if (created != null)
-            Ok($"Vehículo [bold]{created.Placa}[/] registrado correctamente.");
+        {
+            Ok($"Vehículo {Markup.Escape(created.Placa)} registrado correctamente.");
+            AnsiConsole.MarkupLine($"[grey]  Marca/Modelo:[/] {Markup.Escape(created.MarcaModelo)}  [grey]  ID:[/] [dim]{created.Id}[/]");
+        }
         else
-            Error("No se pudo registrar el vehículo. Verifica los IDs ingresados.");
+            Error("No se pudo registrar el vehículo.");
 
         Pause();
     }

@@ -204,7 +204,10 @@ public class OrdenesMenu : BaseMenu
         });
 
         if (created != null)
-            Ok($"Orden [bold]{created.NumeroOrden}[/] creada en estado [yellow]Pendiente[/].");
+        {
+            Ok($"Orden [bold]{Markup.Escape(created.NumeroOrden)}[/] creada en estado [yellow]Pendiente[/].");
+            AnsiConsole.MarkupLine($"[grey]  ID asignado:[/] [cyan]{created.Id}[/]");
+        }
         else
             Error("No se pudo crear la orden.");
 

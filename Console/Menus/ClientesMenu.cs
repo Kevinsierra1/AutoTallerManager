@@ -56,6 +56,7 @@ public class ClientesMenu : BaseMenu
             .BorderStyle(Style.Parse("blue"))
             .Expand();
 
+        table.AddColumn(new TableColumn("[bold]#[/]").Centered());
         table.AddColumn(new TableColumn("[bold]Nombre[/]"));
         table.AddColumn(new TableColumn("[bold]Documento[/]").Centered());
         table.AddColumn(new TableColumn("[bold]Email[/]"));
@@ -65,6 +66,7 @@ public class ClientesMenu : BaseMenu
         foreach (var c in data.Items)
         {
             table.AddRow(
+                $"[bold cyan]{c.Numero}[/]",
                 Markup.Escape(c.NombreCompleto),
                 $"[grey]{Markup.Escape(c.TipoDocumento)}[/] {Markup.Escape(c.NumeroDocumento)}",
                 Markup.Escape(c.Email ?? "-"),
@@ -122,7 +124,11 @@ public class ClientesMenu : BaseMenu
             });
         });
 
-        if (created != null) Ok($"Cliente '{created.NombreCompleto}' creado correctamente.");
+        if (created != null)
+        {
+            Ok($"Cliente [bold]{Markup.Escape(created.NombreCompleto)}[/] creado correctamente.");
+            AnsiConsole.MarkupLine($"[grey]  Número:[/] [bold cyan]#{created.Numero}[/]  [grey]  ID interno:[/] [dim]{created.Id}[/]");
+        }
         else Error("No se pudo crear el cliente.");
         Pause();
     }
@@ -133,25 +139,8 @@ public class ClientesMenu : BaseMenu
     {
         PrintHeader("Actualizar Cliente");
 
-        var busqueda = AskRequired("Busca el cliente (nombre/documento):");
-        PagedData<ClienteModel>? data = null;
-        await WithSpinner("Buscando", async () => { data = await Api.GetClientesAsync(1, 20, busqueda); });
-
-        if (data == null || data.Items.Count == 0) { NoData(); Pause(); return; }
-
-        var opciones = data.Items.Select(c => $"{c.NombreCompleto} | {c.NumeroDocumento}").ToList();
-        opciones.Add("Cancelar");
-
-        var sel = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title("[cyan]  Selecciona el cliente:[/]")
-                .PageSize(10)
-                .HighlightStyle(new Style(Color.Cyan1))
-                .AddChoices(opciones));
-
-        if (sel == "Cancelar") return;
-
-        var cliente = data.Items[opciones.IndexOf(sel)];
+        var cliente = await SeleccionarClienteAsync();
+        if (cliente == null) return;
 
         AnsiConsole.WriteLine();
         Info($"Editando: {cliente.NombreCompleto} — deja vacío para mantener el valor actual.");
@@ -188,25 +177,8 @@ public class ClientesMenu : BaseMenu
     {
         PrintHeader("Eliminar Cliente");
 
-        var busqueda = AskRequired("Busca el cliente (nombre/documento):");
-        PagedData<ClienteModel>? data = null;
-        await WithSpinner("Buscando", async () => { data = await Api.GetClientesAsync(1, 20, busqueda); });
-
-        if (data == null || data.Items.Count == 0) { NoData(); Pause(); return; }
-
-        var opciones = data.Items.Select(c => $"{c.NombreCompleto} | {c.NumeroDocumento}").ToList();
-        opciones.Add("Cancelar");
-
-        var sel = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title("[cyan]  Selecciona el cliente a eliminar:[/]")
-                .PageSize(10)
-                .HighlightStyle(new Style(Color.Cyan1))
-                .AddChoices(opciones));
-
-        if (sel == "Cancelar") return;
-
-        var cliente = data.Items[opciones.IndexOf(sel)];
+        var cliente = await SeleccionarClienteAsync();
+        if (cliente == null) return;
 
         if (!Confirm($"¿Eliminar a '{cliente.NombreCompleto}'? Esta acción es irreversible.")) return;
 
@@ -219,5 +191,63 @@ public class ClientesMenu : BaseMenu
         if (result.ok) Ok("Cliente eliminado (soft delete).");
         else Error(result.error ?? "No se pudo eliminar.");
         Pause();
+    }
+
+    // ── Helper: seleccionar cliente ─────────────────────────────────────────
+    // Acepta: número directo (5), con # (#5), nombre, documento o email.
+    // Si el input es numérico va directo al cliente por #N sin mostrar lista.
+
+    private async Task<ClienteModel?> SeleccionarClienteAsync()
+    {
+        AnsiConsole.MarkupLine("[grey]  Puedes escribir el [bold]#número[/] (ej: 5 o #5), nombre, documento o email.[/]");
+        var input = AskRequired("Busca el cliente:");
+
+        // Búsqueda exacta por número
+        var limpio = input.TrimStart('#');
+        if (int.TryParse(limpio, out var numero))
+        {
+            ClienteModel? exacto = null;
+            await WithSpinner($"Buscando cliente #{numero}", async () =>
+            {
+                exacto = await Api.GetClienteByNumeroAsync(numero);
+            });
+
+            if (exacto != null)
+            {
+                AnsiConsole.MarkupLine($"[grey]  Cliente encontrado:[/] [bold cyan]#{exacto.Numero}[/] {Markup.Escape(exacto.NombreCompleto)}");
+                return exacto;
+            }
+
+            Warn($"No existe ningún cliente con el número #{numero}.");
+            Pause();
+            return null;
+        }
+
+        // Búsqueda por texto → lista de resultados
+        PagedData<ClienteModel>? data = null;
+        await WithSpinner("Buscando", async () => { data = await Api.GetClientesAsync(1, 20, input); });
+
+        if (data == null || data.Items.Count == 0) { NoData("No se encontraron clientes."); Pause(); return null; }
+
+        // Si hay un solo resultado, lo devuelve directamente
+        if (data.Items.Count == 1)
+        {
+            var unico = data.Items[0];
+            AnsiConsole.MarkupLine($"[grey]  Cliente encontrado:[/] [bold cyan]#{unico.Numero}[/] {Markup.Escape(unico.NombreCompleto)}");
+            return unico;
+        }
+
+        var opciones = data.Items.Select(c => $"#{c.Numero}  {c.NombreCompleto} | {c.NumeroDocumento}").ToList();
+        opciones.Add("Cancelar");
+
+        var sel = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("[cyan]  Selecciona el cliente:[/]")
+                .PageSize(12)
+                .HighlightStyle(new Style(Color.Cyan1))
+                .AddChoices(opciones));
+
+        if (sel == "Cancelar") return null;
+        return data.Items[opciones.IndexOf(sel)];
     }
 }

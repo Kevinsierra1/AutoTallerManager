@@ -125,6 +125,9 @@ public class ApiService
     public Task<ClienteModel?> GetClienteByIdAsync(Guid id) =>
         GetAsync<ClienteModel>($"/api/Clientes/{id}");
 
+    public Task<ClienteModel?> GetClienteByNumeroAsync(int numero) =>
+        GetAsync<ClienteModel>($"/api/Clientes/numero/{numero}");
+
     public Task<ClienteModel?> CreateClienteAsync(object dto) =>
         PostAndGetAsync<ClienteModel>("/api/Clientes", dto);
 
@@ -153,6 +156,21 @@ public class ApiService
 
     // Los catálogos (marcas, modelos, colores, categorías) no tienen endpoints propios expuestos.
     // Los obtenemos del swagger o podemos listar desde la DB. Por ahora usamos listas conocidas del seed.
+
+    // ─── Catálogos ────────────────────────────────────────────────────────────
+
+    public Task<List<CatalogoItem>?> GetMarcasAsync() =>
+        GetAsync<List<CatalogoItem>>("/api/Catalogos/marcas");
+
+    public Task<List<ModeloItem>?> GetModelosAsync(Guid? marcaId = null)
+    {
+        var url = "/api/Catalogos/modelos";
+        if (marcaId.HasValue) url += $"?marcaId={marcaId}";
+        return GetAsync<List<ModeloItem>>(url);
+    }
+
+    public Task<List<ColorItem>?> GetColoresAsync() =>
+        GetAsync<List<ColorItem>>("/api/Catalogos/colores");
 
     // ─── Órdenes ──────────────────────────────────────────────────────────────
 

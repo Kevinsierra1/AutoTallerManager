@@ -25,13 +25,23 @@ public class ClientesController : ControllerBase
         return Ok(ApiResponse<PagedResult<ClienteDto>>.Success(result));
     }
 
-    /// <summary>Obtiene un cliente por ID</summary>
+    /// <summary>Obtiene un cliente por ID (GUID)</summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ApiResponse<ClienteDto>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetClienteByIdQuery(id), ct);
+        return Ok(ApiResponse<ClienteDto>.Success(result));
+    }
+
+    /// <summary>Obtiene un cliente por número secuencial (#1, #2, #3…)</summary>
+    [HttpGet("numero/{numero:int}")]
+    [ProducesResponseType(typeof(ApiResponse<ClienteDto>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetByNumero(int numero, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetClienteByNumeroQuery(numero), ct);
         return Ok(ApiResponse<ClienteDto>.Success(result));
     }
 
