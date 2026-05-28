@@ -25,12 +25,41 @@ public class VehiculosController : ControllerBase
         return Ok(ApiResponse<PagedResult<VehiculoDto>>.Success(result));
     }
 
+    /// <summary>Obtiene un vehículo por ID</summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<VehiculoDto>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetVehiculoByIdQuery(id), ct);
+        return Ok(ApiResponse<VehiculoDto>.Success(result));
+    }
+
     /// <summary>Registra un nuevo vehículo</summary>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<VehiculoDto>), 201)]
     public async Task<IActionResult> Create([FromBody] CreateVehiculoDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateVehiculoCommand(dto), ct);
-        return CreatedAtAction(nameof(GetAll), new { }, ApiResponse<VehiculoDto>.Success(result));
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<VehiculoDto>.Success(result));
+    }
+
+    /// <summary>Actualiza un vehículo</summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<VehiculoDto>), 200)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateVehiculoDto dto, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new UpdateVehiculoCommand(id, dto), ct);
+        return Ok(ApiResponse<VehiculoDto>.Success(result));
+    }
+
+    /// <summary>Elimina un vehículo (soft delete)</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await _mediator.Send(new DeleteVehiculoCommand(id), ct);
+        return NoContent();
     }
 }

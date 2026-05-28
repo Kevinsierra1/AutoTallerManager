@@ -266,6 +266,55 @@ public class ApiService
     public Task<PagedData<RepuestoModel>?> GetRepuestosCriticosAsync(int page = 1, int size = 10) =>
         GetAsync<PagedData<RepuestoModel>>($"/api/Dashboard/repuestos-criticos?pageNumber={page}&pageSize={size}");
 
+    // ─── Mini-Órdenes ─────────────────────────────────────────────────────────
+
+    public Task<PagedData<MiniOrdenModel>?> GetMiniOrdenesAsync(int page = 1, int size = 10, int? estado = null, Guid? mecanicoId = null)
+    {
+        var url = $"/api/MiniOrdenes?filtro.pageNumber={page}&filtro.pageSize={size}";
+        if (estado.HasValue) url += $"&filtro.estado={estado}";
+        if (mecanicoId.HasValue) url += $"&filtro.mecanicoId={mecanicoId}";
+        return GetAsync<PagedData<MiniOrdenModel>>(url);
+    }
+
+    public Task<MiniOrdenModel?> GetMiniOrdenByIdAsync(Guid id) =>
+        GetAsync<MiniOrdenModel>($"/api/MiniOrdenes/{id}");
+
+    public Task<MiniOrdenModel?> CreateMiniOrdenAsync(object dto) =>
+        PostAndGetAsync<MiniOrdenModel>("/api/MiniOrdenes", dto);
+
+    public Task<MiniOrdenModel?> EnviarRevisionJefeAsync(Guid id) =>
+        PostAndGetAsync<MiniOrdenModel>($"/api/MiniOrdenes/{id}/enviar-revision", new { });
+
+    public Task<MiniOrdenModel?> AprobarRechazarJefeAsync(Guid id, bool aprobado, string? observacion) =>
+        PostAndGetAsync<MiniOrdenModel>($"/api/MiniOrdenes/{id}/aprobacion-jefe",
+            new { Aprobado = aprobado, Observacion = observacion });
+
+    public Task<MiniOrdenModel?> AprobarRechazarClienteAsync(Guid id, bool aprobado, string? observacion) =>
+        PostAndGetAsync<MiniOrdenModel>($"/api/MiniOrdenes/{id}/aprobacion-cliente",
+            new { Aprobado = aprobado, Observacion = observacion });
+
+    public Task<MiniOrdenModel?> CompletarMiniOrdenAsync(Guid id, string? observacion = null) =>
+        PostAndGetAsync<MiniOrdenModel>($"/api/MiniOrdenes/{id}/completar?observacion={Uri.EscapeDataString(observacion ?? "")}", new { });
+
+    // ─── Usuarios ─────────────────────────────────────────────────────────────
+
+    public Task<PagedData<UsuarioModel>?> GetUsuariosAsync(int page = 1, int size = 20) =>
+        GetAsync<PagedData<UsuarioModel>>($"/api/Usuarios?pageNumber={page}&pageSize={size}");
+
+    public Task<UsuarioModel?> CreateUsuarioAsync(object dto) =>
+        PostAndGetAsync<UsuarioModel>("/api/Usuarios", dto);
+
+    public Task<(bool ok, string? error)> AsignarRolAsync(Guid usuarioId, Guid rolId) =>
+        PostAsync($"/api/Usuarios/{usuarioId}/roles/{rolId}", new { });
+
+    public Task<(bool ok, string? error)> DeleteUsuarioAsync(Guid id) =>
+        DeleteAsync($"/api/Usuarios/{id}");
+
+    // ─── Roles ────────────────────────────────────────────────────────────────
+
+    public Task<List<RolModel>?> GetRolesAsync() =>
+        GetAsync<List<RolModel>>("/api/Roles");
+
     // ─── Health check ─────────────────────────────────────────────────────────
 
     public async Task<bool> PingAsync()

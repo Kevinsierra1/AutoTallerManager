@@ -70,6 +70,52 @@ namespace Infrastructure.Migrations
                     b.ToTable("AprobacionesOrden");
                 });
 
+            modelBuilder.Entity("Domain.Entities.AreaTaller", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Tipo");
+
+                    b.ToTable("AreasTaller", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.Auditoria", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1541,6 +1587,321 @@ namespace Infrastructure.Migrations
                     b.ToTable("MetodosPago");
                 });
 
+            modelBuilder.Entity("Domain.Entities.MiniOrden", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("FechaAprobacionCliente")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaAprobacionJefe")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaFin")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaInicio")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("JefeTallerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("MecanicoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MotivoRechazo")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("NumeroMiniOrden")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid?>("OrdenAreaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrdenServicioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("TotalManoObra")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("TotalMateriales")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JefeTallerId");
+
+                    b.HasIndex("MecanicoId");
+
+                    b.HasIndex("NumeroMiniOrden")
+                        .IsUnique();
+
+                    b.HasIndex("OrdenAreaId");
+
+                    b.HasIndex("OrdenServicioId");
+
+                    b.ToTable("MiniOrdenes", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.MiniOrdenAprobacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Aprobado")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("AprobadoPorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AprobadoPorNombre")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MiniOrdenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Nivel")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MiniOrdenId");
+
+                    b.ToTable("MiniOrdenAprobaciones", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.MiniOrdenDetalle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MiniOrdenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("RepuestoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MiniOrdenId");
+
+                    b.HasIndex("RepuestoId");
+
+                    b.ToTable("MiniOrdenDetalles", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.MiniOrdenHistorial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CambiadoPor")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EstadoAnterior")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EstadoNuevo")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MiniOrdenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("NivelAprobacion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MiniOrdenId");
+
+                    b.ToTable("MiniOrdenHistoriales", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.MiniOrdenManoObra", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("HorasTrabajo")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<Guid>("MiniOrdenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TarifaHora")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("TecnicoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MiniOrdenId");
+
+                    b.HasIndex("TecnicoId");
+
+                    b.ToTable("MiniOrdenManosObra", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.ModeloVehiculo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1699,6 +2060,181 @@ namespace Infrastructure.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("Notificaciones");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdenArea", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("AreaTallerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("FechaFin")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaInicio")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("MecanicoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("OrdenServicioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TotalManoObra")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("TotalMateriales")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AreaTallerId");
+
+                    b.HasIndex("MecanicoId");
+
+                    b.HasIndex("OrdenServicioId");
+
+                    b.ToTable("OrdenAreas", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdenAreaDetalle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("OrdenAreaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("RepuestoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrdenAreaId");
+
+                    b.HasIndex("RepuestoId");
+
+                    b.ToTable("OrdenAreaDetalles", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdenAreaManoObra", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("HorasTrabajo")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<Guid>("OrdenAreaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TarifaHora")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("TecnicoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrdenAreaId");
+
+                    b.HasIndex("TecnicoId");
+
+                    b.ToTable("OrdenAreaManosObra", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.OrdenServicio", b =>
@@ -2270,8 +2806,14 @@ namespace Infrastructure.Migrations
                     b.Property<int>("StockActual")
                         .HasColumnType("integer");
 
+                    b.Property<int>("StockCritico")
+                        .HasColumnType("integer");
+
                     b.Property<int>("StockMinimo")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Ubicacion")
+                        .HasColumnType("text");
 
                     b.Property<string>("Unidad")
                         .HasColumnType("text");
@@ -2451,6 +2993,134 @@ namespace Infrastructure.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("SesionesUsuarios");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SolicitudInventario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("AprobadoPorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AprobadoPorNombre")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("FechaAprobacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaAtencion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("MiniOrdenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MotivoRechazo")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("NumeroSolicitud")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid?>("OrdenServicioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SolicitanteId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MiniOrdenId");
+
+                    b.HasIndex("NumeroSolicitud")
+                        .IsUnique();
+
+                    b.HasIndex("OrdenServicioId");
+
+                    b.HasIndex("SolicitanteId");
+
+                    b.ToTable("SolicitudesInventario", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.SolicitudInventarioDetalle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("CantidadAprobada")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CantidadEntregada")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CantidadSolicitada")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("RepuestoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SolicitudInventarioId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepuestoId");
+
+                    b.HasIndex("SolicitudInventarioId");
+
+                    b.ToTable("SolicitudInventarioDetalles", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.TelefonoCliente", b =>
@@ -2796,6 +3466,126 @@ namespace Infrastructure.Migrations
                             Eliminado = false,
                             Nombre = "CVT"
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.TransferenciaInventario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("AprobadoPorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AprobadoPorNombre")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Destino")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("FechaAprobacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaCompletado")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MotivoRechazo")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("NumeroTransferencia")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Origen")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("SolicitadoPorId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NumeroTransferencia")
+                        .IsUnique();
+
+                    b.HasIndex("SolicitadoPorId");
+
+                    b.ToTable("TransferenciasInventario", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.TransferenciaInventarioDetalle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActualizadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Eliminado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("EliminadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("RepuestoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TransferenciaInventarioId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepuestoId");
+
+                    b.HasIndex("TransferenciaInventarioId");
+
+                    b.ToTable("TransferenciaInventarioDetalles", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Usuario", b =>
@@ -3433,6 +4223,97 @@ namespace Infrastructure.Migrations
                     b.Navigation("OrdenServicio");
                 });
 
+            modelBuilder.Entity("Domain.Entities.MiniOrden", b =>
+                {
+                    b.HasOne("Domain.Entities.Empleado", "JefeTaller")
+                        .WithMany()
+                        .HasForeignKey("JefeTallerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.Empleado", "Mecanico")
+                        .WithMany()
+                        .HasForeignKey("MecanicoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.OrdenArea", "OrdenArea")
+                        .WithMany("MiniOrdenes")
+                        .HasForeignKey("OrdenAreaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.OrdenServicio", "OrdenServicio")
+                        .WithMany("MiniOrdenes")
+                        .HasForeignKey("OrdenServicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JefeTaller");
+
+                    b.Navigation("Mecanico");
+
+                    b.Navigation("OrdenArea");
+
+                    b.Navigation("OrdenServicio");
+                });
+
+            modelBuilder.Entity("Domain.Entities.MiniOrdenAprobacion", b =>
+                {
+                    b.HasOne("Domain.Entities.MiniOrden", "MiniOrden")
+                        .WithMany("Aprobaciones")
+                        .HasForeignKey("MiniOrdenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MiniOrden");
+                });
+
+            modelBuilder.Entity("Domain.Entities.MiniOrdenDetalle", b =>
+                {
+                    b.HasOne("Domain.Entities.MiniOrden", "MiniOrden")
+                        .WithMany("Detalles")
+                        .HasForeignKey("MiniOrdenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Repuesto", "Repuesto")
+                        .WithMany("MiniOrdenDetalles")
+                        .HasForeignKey("RepuestoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MiniOrden");
+
+                    b.Navigation("Repuesto");
+                });
+
+            modelBuilder.Entity("Domain.Entities.MiniOrdenHistorial", b =>
+                {
+                    b.HasOne("Domain.Entities.MiniOrden", "MiniOrden")
+                        .WithMany("Historial")
+                        .HasForeignKey("MiniOrdenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MiniOrden");
+                });
+
+            modelBuilder.Entity("Domain.Entities.MiniOrdenManoObra", b =>
+                {
+                    b.HasOne("Domain.Entities.MiniOrden", "MiniOrden")
+                        .WithMany("ManosObra")
+                        .HasForeignKey("MiniOrdenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Empleado", "Tecnico")
+                        .WithMany()
+                        .HasForeignKey("TecnicoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("MiniOrden");
+
+                    b.Navigation("Tecnico");
+                });
+
             modelBuilder.Entity("Domain.Entities.ModeloVehiculo", b =>
                 {
                     b.HasOne("Domain.Entities.Marca", "Marca")
@@ -3463,6 +4344,69 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdenArea", b =>
+                {
+                    b.HasOne("Domain.Entities.AreaTaller", "AreaTaller")
+                        .WithMany("OrdenAreas")
+                        .HasForeignKey("AreaTallerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Empleado", "Mecanico")
+                        .WithMany()
+                        .HasForeignKey("MecanicoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.OrdenServicio", "OrdenServicio")
+                        .WithMany("OrdenAreas")
+                        .HasForeignKey("OrdenServicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AreaTaller");
+
+                    b.Navigation("Mecanico");
+
+                    b.Navigation("OrdenServicio");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdenAreaDetalle", b =>
+                {
+                    b.HasOne("Domain.Entities.OrdenArea", "OrdenArea")
+                        .WithMany("Detalles")
+                        .HasForeignKey("OrdenAreaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Repuesto", "Repuesto")
+                        .WithMany("OrdenAreaDetalles")
+                        .HasForeignKey("RepuestoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("OrdenArea");
+
+                    b.Navigation("Repuesto");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdenAreaManoObra", b =>
+                {
+                    b.HasOne("Domain.Entities.OrdenArea", "OrdenArea")
+                        .WithMany("ManosObra")
+                        .HasForeignKey("OrdenAreaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Empleado", "Tecnico")
+                        .WithMany()
+                        .HasForeignKey("TecnicoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("OrdenArea");
+
+                    b.Navigation("Tecnico");
                 });
 
             modelBuilder.Entity("Domain.Entities.OrdenServicio", b =>
@@ -3623,6 +4567,49 @@ namespace Infrastructure.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("Domain.Entities.SolicitudInventario", b =>
+                {
+                    b.HasOne("Domain.Entities.MiniOrden", "MiniOrden")
+                        .WithMany("Solicitudes")
+                        .HasForeignKey("MiniOrdenId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.OrdenServicio", "OrdenServicio")
+                        .WithMany("Solicitudes")
+                        .HasForeignKey("OrdenServicioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Domain.Entities.Usuario", "Solicitante")
+                        .WithMany()
+                        .HasForeignKey("SolicitanteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("MiniOrden");
+
+                    b.Navigation("OrdenServicio");
+
+                    b.Navigation("Solicitante");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SolicitudInventarioDetalle", b =>
+                {
+                    b.HasOne("Domain.Entities.Repuesto", "Repuesto")
+                        .WithMany("SolicitudDetalles")
+                        .HasForeignKey("RepuestoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.SolicitudInventario", "SolicitudInventario")
+                        .WithMany("Detalles")
+                        .HasForeignKey("SolicitudInventarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Repuesto");
+
+                    b.Navigation("SolicitudInventario");
+                });
+
             modelBuilder.Entity("Domain.Entities.TelefonoCliente", b =>
                 {
                     b.HasOne("Domain.Entities.Cliente", "Cliente")
@@ -3632,6 +4619,35 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Cliente");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TransferenciaInventario", b =>
+                {
+                    b.HasOne("Domain.Entities.Usuario", "SolicitadoPor")
+                        .WithMany()
+                        .HasForeignKey("SolicitadoPorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("SolicitadoPor");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TransferenciaInventarioDetalle", b =>
+                {
+                    b.HasOne("Domain.Entities.Repuesto", "Repuesto")
+                        .WithMany("TransferenciaDetalles")
+                        .HasForeignKey("RepuestoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.TransferenciaInventario", "TransferenciaInventario")
+                        .WithMany("Detalles")
+                        .HasForeignKey("TransferenciaInventarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Repuesto");
+
+                    b.Navigation("TransferenciaInventario");
                 });
 
             modelBuilder.Entity("Domain.Entities.UsuarioRol", b =>
@@ -3755,6 +4771,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("Vehiculo");
                 });
 
+            modelBuilder.Entity("Domain.Entities.AreaTaller", b =>
+                {
+                    b.Navigation("OrdenAreas");
+                });
+
             modelBuilder.Entity("Domain.Entities.CategoriaRepuesto", b =>
                 {
                     b.Navigation("Repuestos");
@@ -3804,9 +4825,31 @@ namespace Infrastructure.Migrations
                     b.Navigation("Modelos");
                 });
 
+            modelBuilder.Entity("Domain.Entities.MiniOrden", b =>
+                {
+                    b.Navigation("Aprobaciones");
+
+                    b.Navigation("Detalles");
+
+                    b.Navigation("Historial");
+
+                    b.Navigation("ManosObra");
+
+                    b.Navigation("Solicitudes");
+                });
+
             modelBuilder.Entity("Domain.Entities.ModeloVehiculo", b =>
                 {
                     b.Navigation("Vehiculos");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdenArea", b =>
+                {
+                    b.Navigation("Detalles");
+
+                    b.Navigation("ManosObra");
+
+                    b.Navigation("MiniOrdenes");
                 });
 
             modelBuilder.Entity("Domain.Entities.OrdenServicio", b =>
@@ -3820,6 +4863,12 @@ namespace Infrastructure.Migrations
                     b.Navigation("HistorialEstados");
 
                     b.Navigation("ManosObra");
+
+                    b.Navigation("MiniOrdenes");
+
+                    b.Navigation("OrdenAreas");
+
+                    b.Navigation("Solicitudes");
                 });
 
             modelBuilder.Entity("Domain.Entities.Permiso", b =>
@@ -3845,11 +4894,19 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("HistorialPrecios");
 
+                    b.Navigation("MiniOrdenDetalles");
+
                     b.Navigation("Movimientos");
+
+                    b.Navigation("OrdenAreaDetalles");
 
                     b.Navigation("ProveedorRepuestos");
 
                     b.Navigation("Salidas");
+
+                    b.Navigation("SolicitudDetalles");
+
+                    b.Navigation("TransferenciaDetalles");
                 });
 
             modelBuilder.Entity("Domain.Entities.Rol", b =>
@@ -3857,6 +4914,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("RolPermisos");
 
                     b.Navigation("UsuarioRoles");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SolicitudInventario", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("Domain.Entities.TipoCombustible", b =>
@@ -3867,6 +4929,11 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.TipoTransmision", b =>
                 {
                     b.Navigation("Vehiculos");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TransferenciaInventario", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("Domain.Entities.Usuario", b =>

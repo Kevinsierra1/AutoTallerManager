@@ -17,6 +17,7 @@ public static class DatabaseSeeder
         try
         {
             await SeedRolesAsync(context);
+            await SeedAreasTallerAsync(context);
             await SeedTiposDocumentoAsync(context);
             await SeedMarcasYModelosAsync(context);
             await SeedColoresAsync(context);
@@ -24,6 +25,7 @@ public static class DatabaseSeeder
             await SeedTiposServicioAsync(context);
             await SeedMetodosPagoAsync(context);
             await SeedAdminUserAsync(context);
+            await SeedUsuariosPruebaAsync(context);
             await context.SaveChangesAsync();
             logger.LogInformation("Datos de prueba cargados exitosamente.");
         }
@@ -40,7 +42,26 @@ public static class DatabaseSeeder
             new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000001"), Nombre = "Admin", Descripcion = "Administrador del sistema" },
             new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000002"), Nombre = "Mecánico", Descripcion = "Técnico mecánico" },
             new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000003"), Nombre = "Recepcionista", Descripcion = "Atención al cliente" },
-            new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000004"), Nombre = "Cliente", Descripcion = "Cliente del taller" }
+            new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000004"), Nombre = "Cliente", Descripcion = "Cliente del taller" },
+            new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000005"), Nombre = "JefeTaller", Descripcion = "Jefe de taller — aprueba presupuestos y mini-órdenes" },
+            new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000006"), Nombre = "MecanicoDiagnostico", Descripcion = "Mecánico especialista en diagnóstico" },
+            new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000007"), Nombre = "MecanicoArea", Descripcion = "Mecánico asignado a un área específica" },
+            new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000008"), Nombre = "JefeAlmacen", Descripcion = "Jefe de almacén — aprueba solicitudes de inventario" },
+            new Rol { Id = Guid.Parse("10000000-0000-0000-0000-000000000009"), Nombre = "JefeBodega", Descripcion = "Jefe de bodega — gestiona transferencias de stock" }
+        );
+    }
+
+    private static async Task SeedAreasTallerAsync(ApplicationDbContext ctx)
+    {
+        if (await ctx.AreasTaller.AnyAsync()) return;
+        ctx.AreasTaller.AddRange(
+            new Domain.Entities.AreaTaller { Id = Guid.Parse("A0000000-0000-0000-0000-000000000001"), Nombre = "Motor", Tipo = Domain.Enums.TipoArea.Motor, Descripcion = "Reparación y mantenimiento de motor" },
+            new Domain.Entities.AreaTaller { Id = Guid.Parse("A0000000-0000-0000-0000-000000000002"), Nombre = "Frenos", Tipo = Domain.Enums.TipoArea.Frenos, Descripcion = "Sistema de frenos" },
+            new Domain.Entities.AreaTaller { Id = Guid.Parse("A0000000-0000-0000-0000-000000000003"), Nombre = "Suspensión", Tipo = Domain.Enums.TipoArea.Suspension, Descripcion = "Suspensión y dirección" },
+            new Domain.Entities.AreaTaller { Id = Guid.Parse("A0000000-0000-0000-0000-000000000004"), Nombre = "Eléctrico", Tipo = Domain.Enums.TipoArea.Electrico, Descripcion = "Sistema eléctrico y electrónico" },
+            new Domain.Entities.AreaTaller { Id = Guid.Parse("A0000000-0000-0000-0000-000000000005"), Nombre = "Transmisión", Tipo = Domain.Enums.TipoArea.Transmision, Descripcion = "Caja de cambios y transmisión" },
+            new Domain.Entities.AreaTaller { Id = Guid.Parse("A0000000-0000-0000-0000-000000000006"), Nombre = "Pintura", Tipo = Domain.Enums.TipoArea.Pintura, Descripcion = "Carrocería y pintura" },
+            new Domain.Entities.AreaTaller { Id = Guid.Parse("A0000000-0000-0000-0000-000000000007"), Nombre = "Diagnóstico", Tipo = Domain.Enums.TipoArea.Diagnostico, Descripcion = "Diagnóstico computarizado" }
         );
     }
 
@@ -130,7 +151,7 @@ public static class DatabaseSeeder
         var adminId = Guid.Parse("20000000-0000-0000-0000-000000000001");
         var rolAdminId = Guid.Parse("10000000-0000-0000-0000-000000000001");
 
-        var admin = new Usuario
+        ctx.Usuarios.Add(new Usuario
         {
             Id = adminId,
             Email = "admin@autotaller.com",
@@ -138,9 +159,60 @@ public static class DatabaseSeeder
             Nombres = "Administrador",
             Apellidos = "Sistema",
             Activo = true
+        });
+        ctx.UsuarioRoles.Add(new UsuarioRol { UsuarioId = adminId, RolId = rolAdminId });
+    }
+
+    private static async Task SeedUsuariosPruebaAsync(ApplicationDbContext ctx)
+    {
+        // Solo crea si no existe ninguno de los usuarios de prueba
+        if (await ctx.Usuarios.AnyAsync(u => u.Email == "jefe@autotaller.com")) return;
+
+        var usuarios = new[]
+        {
+            (Id: Guid.Parse("20000000-0000-0000-0000-000000000002"),
+             Email: "jefe@autotaller.com",       Pass: "Jefe@123",
+             Nombres: "Carlos",   Apellidos: "Ramírez",
+             RolId: Guid.Parse("10000000-0000-0000-0000-000000000005")),  // JefeTaller
+
+            (Id: Guid.Parse("20000000-0000-0000-0000-000000000003"),
+             Email: "mecanico@autotaller.com",   Pass: "Mecanico@123",
+             Nombres: "Andrés",   Apellidos: "Torres",
+             RolId: Guid.Parse("10000000-0000-0000-0000-000000000002")),  // Mecánico
+
+            (Id: Guid.Parse("20000000-0000-0000-0000-000000000004"),
+             Email: "recepcion@autotaller.com",  Pass: "Recepcion@123",
+             Nombres: "Laura",    Apellidos: "Gómez",
+             RolId: Guid.Parse("10000000-0000-0000-0000-000000000003")),  // Recepcionista
+
+            (Id: Guid.Parse("20000000-0000-0000-0000-000000000005"),
+             Email: "cliente@autotaller.com",    Pass: "Cliente@123",
+             Nombres: "Juan",     Apellidos: "Pérez",
+             RolId: Guid.Parse("10000000-0000-0000-0000-000000000004")),  // Cliente
+
+            (Id: Guid.Parse("20000000-0000-0000-0000-000000000006"),
+             Email: "almacen@autotaller.com",    Pass: "Almacen@123",
+             Nombres: "Miguel",   Apellidos: "Vargas",
+             RolId: Guid.Parse("10000000-0000-0000-0000-000000000008")),  // JefeAlmacen
+
+            (Id: Guid.Parse("20000000-0000-0000-0000-000000000007"),
+             Email: "diagnostico@autotaller.com", Pass: "Diagnostico@123",
+             Nombres: "Felipe",   Apellidos: "Castro",
+             RolId: Guid.Parse("10000000-0000-0000-0000-000000000006")),  // MecanicoDiagnostico
         };
 
-        ctx.Usuarios.Add(admin);
-        ctx.UsuarioRoles.Add(new UsuarioRol { UsuarioId = adminId, RolId = rolAdminId });
+        foreach (var u in usuarios)
+        {
+            ctx.Usuarios.Add(new Usuario
+            {
+                Id = u.Id,
+                Email = u.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(u.Pass),
+                Nombres = u.Nombres,
+                Apellidos = u.Apellidos,
+                Activo = true
+            });
+            ctx.UsuarioRoles.Add(new UsuarioRol { UsuarioId = u.Id, RolId = u.RolId });
+        }
     }
 }

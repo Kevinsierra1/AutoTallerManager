@@ -34,8 +34,9 @@ public class OrdenesController : ControllerBase
         return Ok(ApiResponse<OrdenServicioDto>.Success(result));
     }
 
-    /// <summary>Crea una nueva orden de servicio</summary>
+    /// <summary>Crea una nueva orden de servicio (solo Recepcionista o Jefe de Taller)</summary>
     [HttpPost]
+    [Authorize(Policy = "RecepcionOnly")]
     [ProducesResponseType(typeof(ApiResponse<OrdenServicioDto>), 201)]
     public async Task<IActionResult> Create([FromBody] CreateOrdenDto dto, CancellationToken ct)
     {
@@ -43,8 +44,9 @@ public class OrdenesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<OrdenServicioDto>.Success(result));
     }
 
-    /// <summary>Aprueba una orden de servicio</summary>
+    /// <summary>Aprueba una orden para iniciar trabajo (solo Jefe de Taller)</summary>
     [HttpPost("{id:guid}/aprobar")]
+    [Authorize(Policy = "JefeTallerOnly")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> Aprobar(Guid id, [FromBody] Guid clienteId, CancellationToken ct)
     {
@@ -52,9 +54,9 @@ public class OrdenesController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Asigna mecánico a una orden</summary>
+    /// <summary>Asigna mecánico a una orden (Jefe de Taller o Recepcionista)</summary>
     [HttpPost("{id:guid}/asignar-mecanico")]
-    [Authorize(Roles = "Admin,Recepcionista")]
+    [Authorize(Policy = "RecepcionOnly")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> AsignarMecanico(Guid id, [FromBody] Guid empleadoId, CancellationToken ct)
     {
@@ -62,9 +64,9 @@ public class OrdenesController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Finaliza una orden de servicio</summary>
+    /// <summary>Finaliza una orden de servicio (Jefe de Taller o Mecánico)</summary>
     [HttpPost("{id:guid}/finalizar")]
-    [Authorize(Roles = "Admin,Mecánico")]
+    [Authorize(Policy = "MecanicoOJefe")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> Finalizar(Guid id, CancellationToken ct)
     {
@@ -72,9 +74,9 @@ public class OrdenesController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Cancela una orden de servicio</summary>
+    /// <summary>Cancela una orden (Jefe de Taller o Recepcionista)</summary>
     [HttpPost("{id:guid}/cancelar")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "RecepcionOnly")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> Cancelar(Guid id, [FromBody] string motivo, CancellationToken ct)
     {

@@ -10,12 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog
+// Serilog — toda la configuración viene de appsettings.json
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
-    .Enrich.FromLogContext()
-    .WriteTo.Console()
-    .WriteTo.File("logs/autotaller-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -60,21 +57,40 @@ using (var scope = app.Services.CreateScope())
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+// Swagger siempre disponible (desactivar en producción real cambiando la condición)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoTallerManager API v1");
-        c.RoutePrefix = "swagger";
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoTallerManager API v1");
+    c.RoutePrefix = "swagger";
+    c.DocumentTitle = "AutoTallerManager API";
+    c.DefaultModelsExpandDepth(-1);
+});
 
 app.UseIpRateLimiting();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Abrir Swagger automáticamente al arrancar en Development
+if (app.Environment.IsDevelopment())
+{
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        var url = "http://localhost:5000/swagger";
+        Log.Information("AutoTallerManager API corriendo en {Url}", url);
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch { /* si no puede abrir el browser, continúa normal */ }
+    });
+}
 
 app.Run();
 

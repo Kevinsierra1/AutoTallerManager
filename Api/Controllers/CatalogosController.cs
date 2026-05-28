@@ -105,6 +105,46 @@ public class CatalogosController : ControllerBase
         return Ok(ApiResponse<List<CatalogoItemDto>>.Success(result));
     }
 
+    // ── Clientes ─────────────────────────────────────────────────────────────
+
+    /// <summary>Lista los tipos de documento (CC, NIT, Pasaporte…)</summary>
+    [HttpGet("tipos-documento")]
+    public async Task<IActionResult> GetTiposDocumento(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetTiposDocumentoQuery(), ct);
+        return Ok(ApiResponse<List<TipoDocumentoItemDto>>.Success(result));
+    }
+
+    // ── Servicios / Órdenes ───────────────────────────────────────────────────
+
+    /// <summary>Lista los tipos de servicio con precio base</summary>
+    [HttpGet("tipos-servicio")]
+    public async Task<IActionResult> GetTiposServicio(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetTiposServicioQuery(), ct);
+        return Ok(ApiResponse<List<TipoServicioItemDto>>.Success(result));
+    }
+
+    // ── Facturación ───────────────────────────────────────────────────────────
+
+    /// <summary>Lista los métodos de pago disponibles</summary>
+    [HttpGet("metodos-pago")]
+    public async Task<IActionResult> GetMetodosPago(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetMetodosPagoQuery(), ct);
+        return Ok(ApiResponse<List<CatalogoItemDto>>.Success(result));
+    }
+
+    // ── Repuestos ─────────────────────────────────────────────────────────────
+
+    /// <summary>Lista las categorías de repuestos</summary>
+    [HttpGet("categorias-repuesto")]
+    public async Task<IActionResult> GetCategoriasRepuesto(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetCategoriasRepuestoQuery(), ct);
+        return Ok(ApiResponse<List<CategoriaRepuestoItemDto>>.Success(result));
+    }
+
     // ── Seguridad ─────────────────────────────────────────────────────────────
 
     /// <summary>Lista los permisos del sistema, opcionalmente filtrados por módulo</summary>

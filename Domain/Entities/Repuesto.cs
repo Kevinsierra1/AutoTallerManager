@@ -11,7 +11,9 @@ public class Repuesto : BaseEntity
     public decimal PrecioVenta { get; set; }
     public int StockActual { get; set; }
     public int StockMinimo { get; set; }
+    public int StockCritico { get; set; }
     public string? Unidad { get; set; }
+    public string? Ubicacion { get; set; }
     public bool Activo { get; set; } = true;
     public ICollection<MovimientoInventario>? Movimientos { get; set; }
     public ICollection<ProveedorRepuesto>? ProveedorRepuestos { get; set; }
@@ -19,4 +21,8 @@ public class Repuesto : BaseEntity
     public ICollection<HistorialPrecioRepuesto>? HistorialPrecios { get; set; }
     public ICollection<EntradaInventario>? Entradas { get; set; }
     public ICollection<SalidaInventario>? Salidas { get; set; }
+    public ICollection<MiniOrdenDetalle>? MiniOrdenDetalles { get; set; }
+    public ICollection<OrdenAreaDetalle>? OrdenAreaDetalles { get; set; }
+    public ICollection<SolicitudInventarioDetalle>? SolicitudDetalles { get; set; }
+    public ICollection<TransferenciaInventarioDetalle>? TransferenciaDetalles { get; set; }
 }

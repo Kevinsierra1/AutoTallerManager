@@ -33,8 +33,27 @@ public static class JwtExtensions
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-            options.AddPolicy("StaffOnly", policy => policy.RequireRole("Admin", "Mecánico", "Recepcionista"));
+            // Políticas base
+            options.AddPolicy("AdminOnly",      policy => policy.RequireRole("Admin"));
+            options.AddPolicy("StaffOnly",      policy => policy.RequireRole("Admin", "Mecánico", "Recepcionista", "JefeTaller", "MecanicoDiagnostico", "MecanicoArea"));
+
+            // Flujo M-J-C
+            options.AddPolicy("MecanicoOJefe",  policy => policy.RequireRole("Admin", "JefeTaller", "Mecánico", "MecanicoDiagnostico", "MecanicoArea"));
+            options.AddPolicy("JefeTallerOnly", policy => policy.RequireRole("Admin", "JefeTaller"));
+            options.AddPolicy("MecanicoOnly",   policy => policy.RequireRole("Admin", "JefeTaller", "Mecánico", "MecanicoDiagnostico", "MecanicoArea"));
+
+            // Inventario
+            options.AddPolicy("AlmacenOnly",    policy => policy.RequireRole("Admin", "JefeAlmacen", "JefeBodega"));
+            options.AddPolicy("AlmacenOTaller", policy => policy.RequireRole("Admin", "JefeTaller", "JefeAlmacen", "JefeBodega", "Mecánico", "MecanicoArea"));
+
+            // Cliente puede aprobar sus propias mini-órdenes
+            options.AddPolicy("ClienteOrAdmin", policy => policy.RequireRole("Admin", "Cliente", "Recepcionista"));
+
+            // Recepción y atención al cliente
+            options.AddPolicy("RecepcionOnly",  policy => policy.RequireRole("Admin", "Recepcionista", "JefeTaller"));
+
+            // Dashboard y reportes
+            options.AddPolicy("Reportes",       policy => policy.RequireRole("Admin", "JefeTaller", "JefeAlmacen", "JefeBodega"));
         });
 
         return services;

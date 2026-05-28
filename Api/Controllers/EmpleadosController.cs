@@ -26,12 +26,40 @@ public class EmpleadosController : ControllerBase
         return Ok(ApiResponse<PagedResult<EmpleadoDto>>.Success(result));
     }
 
+    /// <summary>Obtiene un empleado por ID</summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<EmpleadoDto>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetEmpleadoByIdQuery(id), ct);
+        return Ok(ApiResponse<EmpleadoDto>.Success(result));
+    }
+
     /// <summary>Registra un nuevo empleado</summary>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<EmpleadoDto>), 201)]
     public async Task<IActionResult> Create([FromBody] CreateEmpleadoDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateEmpleadoCommand(dto), ct);
-        return CreatedAtAction(nameof(GetAll), new { id = result.Id }, ApiResponse<EmpleadoDto>.Success(result));
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<EmpleadoDto>.Success(result));
+    }
+
+    /// <summary>Actualiza un empleado</summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<EmpleadoDto>), 200)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateEmpleadoDto dto, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new UpdateEmpleadoCommand(id, dto), ct);
+        return Ok(ApiResponse<EmpleadoDto>.Success(result));
+    }
+
+    /// <summary>Elimina un empleado (soft delete)</summary>
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await _mediator.Send(new DeleteEmpleadoCommand(id), ct);
+        return NoContent();
     }
 }

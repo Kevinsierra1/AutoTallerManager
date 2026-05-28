@@ -232,3 +232,87 @@ public class ModeloModel { public Guid Id { get; set; } public string Nombre { g
 public class ColorModel { public Guid Id { get; set; } public string Nombre { get; set; } = ""; }
 public class CategoriaRepuestoModel { public Guid Id { get; set; } public string Nombre { get; set; } = ""; }
 public class EmpleadoModel { public Guid Id { get; set; } public string Nombres { get; set; } = ""; public string Apellidos { get; set; } = ""; public string NombreCompleto => $"{Nombres} {Apellidos}"; }
+
+// ─── Mini-Órdenes ─────────────────────────────────────────────────────────────
+
+public class MiniOrdenModel
+{
+    public Guid Id { get; set; }
+    public string NumeroMiniOrden { get; set; } = "";
+    public Guid OrdenServicioId { get; set; }
+    public string? NumeroOrden { get; set; }
+    public Guid? OrdenAreaId { get; set; }
+    public string? AreaNombre { get; set; }
+    public string Descripcion { get; set; } = "";
+    public int Estado { get; set; }
+    public string? EstadoNombre { get; set; }
+    public Guid? MecanicoId { get; set; }
+    public string? MecanicoNombre { get; set; }
+    public Guid? JefeTallerId { get; set; }
+    public string? JefeTallerNombre { get; set; }
+    public DateTime? FechaAprobacionJefe { get; set; }
+    public DateTime? FechaAprobacionCliente { get; set; }
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+    public decimal TotalMateriales { get; set; }
+    public decimal TotalManoObra { get; set; }
+    public decimal Total { get; set; }
+    public string? Observaciones { get; set; }
+    public string? MotivoRechazo { get; set; }
+    public DateTime CreadoEn { get; set; }
+
+    public string EstadoColor => Estado switch
+    {
+        0 => "grey",
+        1 => "yellow",
+        2 => "blue",
+        3 => "yellow",
+        4 => "cyan",
+        5 => "cyan",
+        6 => "green",
+        7 => "red",
+        8 => "red",
+        9 => "red",
+        _ => "white"
+    };
+}
+
+// ─── Usuarios / Roles ────────────────────────────────────────────────────────
+
+public class UsuarioModel
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = "";
+    public string Nombres { get; set; } = "";
+    public string Apellidos { get; set; } = "";
+    public bool Activo { get; set; }
+    public List<string> Roles { get; set; } = [];
+    public DateTime CreadoEn { get; set; }
+    public string NombreCompleto => $"{Nombres} {Apellidos}".Trim();
+    public string RolesStr => string.Join(", ", Roles);
+}
+
+public class RolModel
+{
+    public Guid Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string? Descripcion { get; set; }
+}
+
+// ─── Helpers de roles ─────────────────────────────────────────────────────────
+
+public static class RolHelper
+{
+    public static bool EsAdmin(this AuthResponse u) => u.Roles.Contains("Admin");
+    public static bool EsJefeTaller(this AuthResponse u) => u.Roles.Contains("JefeTaller") || u.EsAdmin();
+    public static bool EsMecanico(this AuthResponse u) =>
+        u.Roles.Any(r => r is "Mecánico" or "MecanicoDiagnostico" or "MecanicoArea") || u.EsAdmin();
+    public static bool EsRecepcionista(this AuthResponse u) => u.Roles.Contains("Recepcionista") || u.EsAdmin();
+    public static bool EsCliente(this AuthResponse u) => u.Roles.Contains("Cliente");
+    public static bool EsAlmacen(this AuthResponse u) =>
+        u.Roles.Any(r => r is "JefeAlmacen" or "JefeBodega") || u.EsAdmin();
+    public static bool PuedeVerInventario(this AuthResponse u) =>
+        u.EsAlmacen() || u.EsJefeTaller() || u.EsAdmin();
+    public static bool PuedeGestionarMiniOrdenes(this AuthResponse u) =>
+        u.EsMecanico() || u.EsJefeTaller() || u.EsCliente() || u.EsAdmin();
+}

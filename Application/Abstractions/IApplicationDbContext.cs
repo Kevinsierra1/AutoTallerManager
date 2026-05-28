@@ -83,5 +83,24 @@ public interface IApplicationDbContext
     DbSet<Notificacion> Notificaciones { get; }
     DbSet<ConfiguracionSistema> ConfiguracionesSistema { get; }
 
+    // ── Gestión por áreas ───────────────────────────────────────────────────────
+    DbSet<AreaTaller> AreasTaller { get; }
+    DbSet<OrdenArea> OrdenAreas { get; }
+    DbSet<OrdenAreaDetalle> OrdenAreaDetalles { get; }
+    DbSet<OrdenAreaManoObra> OrdenAreaManosObra { get; }
+
+    // ── Mini-órdenes (Flujo M-J-C) ─────────────────────────────────────────────
+    DbSet<MiniOrden> MiniOrdenes { get; }
+    DbSet<MiniOrdenDetalle> MiniOrdenDetalles { get; }
+    DbSet<MiniOrdenManoObra> MiniOrdenManosObra { get; }
+    DbSet<MiniOrdenHistorial> MiniOrdenHistoriales { get; }
+    DbSet<MiniOrdenAprobacion> MiniOrdenAprobaciones { get; }
+
+    // ── Inventario empresarial ──────────────────────────────────────────────────
+    DbSet<SolicitudInventario> SolicitudesInventario { get; }
+    DbSet<SolicitudInventarioDetalle> SolicitudInventarioDetalles { get; }
+    DbSet<TransferenciaInventario> TransferenciasInventario { get; }
+    DbSet<TransferenciaInventarioDetalle> TransferenciaInventarioDetalles { get; }
+
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

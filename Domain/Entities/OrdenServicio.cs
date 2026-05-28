@@ -23,4 +23,7 @@ public class OrdenServicio : BaseEntity
     public ICollection<HistorialEstadoOrden>? HistorialEstados { get; set; }
     public ICollection<AprobacionOrden>? Aprobaciones { get; set; }
     public ICollection<OrdenServicioExtra>? Extras { get; set; }
+    public ICollection<OrdenArea>? OrdenAreas { get; set; }
+    public ICollection<MiniOrden>? MiniOrdenes { get; set; }
+    public ICollection<SolicitudInventario>? Solicitudes { get; set; }
 }

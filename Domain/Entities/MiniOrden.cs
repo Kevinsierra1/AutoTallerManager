@@ -1,0 +1,32 @@
+using Domain.Enums;
+
+namespace Domain.Entities;
+
+public class MiniOrden : BaseEntity
+{
+    public string NumeroMiniOrden { get; set; } = string.Empty;
+    public Guid OrdenServicioId { get; set; }
+    public OrdenServicio OrdenServicio { get; set; } = null!;
+    public Guid? OrdenAreaId { get; set; }
+    public OrdenArea? OrdenArea { get; set; }
+    public string Descripcion { get; set; } = string.Empty;
+    public EstadoMiniOrden Estado { get; set; } = EstadoMiniOrden.Borrador;
+    public Guid? MecanicoId { get; set; }
+    public Empleado? Mecanico { get; set; }
+    public Guid? JefeTallerId { get; set; }
+    public Empleado? JefeTaller { get; set; }
+    public DateTime? FechaAprobacionJefe { get; set; }
+    public DateTime? FechaAprobacionCliente { get; set; }
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+    public decimal TotalMateriales { get; set; }
+    public decimal TotalManoObra { get; set; }
+    public decimal Total { get; set; }
+    public string? Observaciones { get; set; }
+    public string? MotivoRechazo { get; set; }
+    public ICollection<MiniOrdenDetalle>? Detalles { get; set; }
+    public ICollection<MiniOrdenManoObra>? ManosObra { get; set; }
+    public ICollection<MiniOrdenHistorial>? Historial { get; set; }
+    public ICollection<MiniOrdenAprobacion>? Aprobaciones { get; set; }
+    public ICollection<SolicitudInventario>? Solicitudes { get; set; }
+}

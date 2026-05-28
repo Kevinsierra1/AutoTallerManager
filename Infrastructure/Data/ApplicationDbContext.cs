@@ -86,7 +86,26 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Notificacion> Notificaciones => Set<Notificacion>();
     public DbSet<ConfiguracionSistema> ConfiguracionesSistema => Set<ConfiguracionSistema>();
 
-    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
+    // ── Gestión por áreas ───────────────────────────────────────────────────────
+    public DbSet<AreaTaller> AreasTaller => Set<AreaTaller>();
+    public DbSet<OrdenArea> OrdenAreas => Set<OrdenArea>();
+    public DbSet<OrdenAreaDetalle> OrdenAreaDetalles => Set<OrdenAreaDetalle>();
+    public DbSet<OrdenAreaManoObra> OrdenAreaManosObra => Set<OrdenAreaManoObra>();
+
+    // ── Mini-órdenes (Flujo M-J-C) ─────────────────────────────────────────────
+    public DbSet<MiniOrden> MiniOrdenes => Set<MiniOrden>();
+    public DbSet<MiniOrdenDetalle> MiniOrdenDetalles => Set<MiniOrdenDetalle>();
+    public DbSet<MiniOrdenManoObra> MiniOrdenManosObra => Set<MiniOrdenManoObra>();
+    public DbSet<MiniOrdenHistorial> MiniOrdenHistoriales => Set<MiniOrdenHistorial>();
+    public DbSet<MiniOrdenAprobacion> MiniOrdenAprobaciones => Set<MiniOrdenAprobacion>();
+
+    // ── Inventario empresarial ──────────────────────────────────────────────────
+    public DbSet<SolicitudInventario> SolicitudesInventario => Set<SolicitudInventario>();
+    public DbSet<SolicitudInventarioDetalle> SolicitudInventarioDetalles => Set<SolicitudInventarioDetalle>();
+    public DbSet<TransferenciaInventario> TransferenciasInventario => Set<TransferenciaInventario>();
+    public DbSet<TransferenciaInventarioDetalle> TransferenciaInventarioDetalles => Set<TransferenciaInventarioDetalle>();
+
+    public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
         foreach (var entry in ChangeTracker.Entries<Domain.Entities.BaseEntity>())
         {
@@ -117,5 +136,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
         // ── Regular keys ────────────────────────────────────────────────────────
         modelBuilder.Entity<ProveedorRepuesto>().HasKey(pr => pr.Id);
+
+        // ── Soft delete filters para nuevas entidades ──────────────────────────
+        modelBuilder.Entity<MiniOrden>().HasQueryFilter(e => !e.Eliminado);
+        modelBuilder.Entity<SolicitudInventario>().HasQueryFilter(e => !e.Eliminado);
+        modelBuilder.Entity<TransferenciaInventario>().HasQueryFilter(e => !e.Eliminado);
     }
 }

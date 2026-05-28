@@ -21,6 +21,21 @@ public class AuthMenu
             AnsiConsole.Write(new Rule("[grey]Sistema de Gestión de Taller Automotriz[/]").RuleStyle("grey"));
             AnsiConsole.WriteLine();
 
+            // ── Usuarios de prueba ──
+            var hint = new Table().Border(TableBorder.None).HideHeaders().Expand();
+            hint.AddColumn(""); hint.AddColumn(""); hint.AddColumn("");
+            hint.AddRow("[grey]admin@autotaller.com[/]",    "[grey]Admin@123[/]",       "[red]Admin[/]");
+            hint.AddRow("[grey]jefe@autotaller.com[/]",     "[grey]Jefe@123[/]",        "[yellow]Jefe de Taller[/]");
+            hint.AddRow("[grey]mecanico@autotaller.com[/]", "[grey]Mecanico@123[/]",    "[cyan]Mecánico[/]");
+            hint.AddRow("[grey]recepcion@autotaller.com[/]","[grey]Recepcion@123[/]",   "[green]Recepcionista[/]");
+            hint.AddRow("[grey]cliente@autotaller.com[/]",  "[grey]Cliente@123[/]",     "[green]Cliente[/]");
+            hint.AddRow("[grey]almacen@autotaller.com[/]",  "[grey]Almacen@123[/]",     "[fuchsia]Jefe Almacén[/]");
+            AnsiConsole.Write(new Panel(hint)
+                .Header("[grey]  Usuarios disponibles[/]")
+                .Border(BoxBorder.Rounded)
+                .BorderStyle(Style.Parse("grey")));
+            AnsiConsole.WriteLine();
+
             var opcion = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title("[bold cyan]  ¿Qué deseas hacer?[/]")
@@ -60,8 +75,32 @@ public class AuthMenu
             if (auth != null)
             {
                 _api.SetToken(auth.Token);
-                AnsiConsole.MarkupLine($"[green]  ✓ Bienvenido, [bold]{Markup.Escape(auth.NombreCompleto)}[/]! ([yellow]{Markup.Escape(auth.RolesStr)}[/])[/]");
-                await Task.Delay(1200);
+                AnsiConsole.Clear();
+                AnsiConsole.Write(new FigletText("AutoTaller").Color(Color.Blue));
+
+                (string rolColor, string rolIcon, string bienvenida) = auth.Roles.FirstOrDefault() switch
+                {
+                    "Admin"               => ("red",     "⚙",  "Acceso total al sistema"),
+                    "JefeTaller"          => ("yellow",  "🔧", "Panel de Jefe de Taller"),
+                    "Mecánico"            => ("cyan",    "🔩", "Panel de Mecánico"),
+                    "MecanicoDiagnostico" => ("cyan",    "🔍", "Panel de Diagnóstico"),
+                    "MecanicoArea"        => ("cyan",    "🔩", "Panel de Área"),
+                    "Recepcionista"       => ("green",   "📋", "Panel de Recepción"),
+                    "Cliente"             => ("green",   "🚗", "Portal del Cliente"),
+                    "JefeAlmacen"         => ("fuchsia", "📦", "Panel de Almacén"),
+                    "JefeBodega"          => ("fuchsia", "📦", "Panel de Bodega"),
+                    _                     => ("white",   "👤", "Panel de usuario")
+                };
+
+                AnsiConsole.Write(new Panel(
+                    $"[white]  Bienvenido, [bold]{Markup.Escape(auth.NombreCompleto)}[/][/]\n\n" +
+                    $"  Rol: [{rolColor}]{rolIcon}  {Markup.Escape(auth.RolesStr)}[/]\n" +
+                    $"  {bienvenida}")
+                    .Header("[bold green]  ✓ Sesión Iniciada[/]")
+                    .Border(BoxBorder.Rounded)
+                    .BorderStyle(Style.Parse(rolColor)));
+
+                await Task.Delay(1500);
                 return auth;
             }
 

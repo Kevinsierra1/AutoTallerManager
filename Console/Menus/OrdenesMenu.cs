@@ -14,28 +14,53 @@ public class OrdenesMenu : BaseMenu
         {
             PrintHeader("Órdenes de Servicio");
 
-            var opcion = Choice("  Órdenes:",
-                "  Listar Órdenes",
-                "  Filtrar por Estado",
-                "  Ver Detalle de Orden",
-                "  Crear Orden",
-                "  Aprobar Orden",
-                "  Asignar Mecánico",
-                "  Finalizar Orden",
-                "  Cancelar Orden",
-                "  Volver al Menú Principal");
+            var opciones = BuildOpciones();
+            var opcion = Choice("  Órdenes:", opciones.ToArray());
 
             if (opcion.Contains("Volver")) return;
 
-            if (opcion.Contains("Listar"))       await ListarAsync();
-            else if (opcion.Contains("Filtrar"))      await FiltrarPorEstadoAsync();
-            else if (opcion.Contains("Detalle"))      await VerDetalleAsync();
-            else if (opcion.Contains("Crear"))        await CrearAsync();
-            else if (opcion.Contains("Aprobar"))      await AprobarAsync();
-            else if (opcion.Contains("Asignar"))      await AsignarMecanicoAsync();
-            else if (opcion.Contains("Finalizar"))    await FinalizarAsync();
-            else if (opcion.Contains("Cancelar"))     await CancelarAsync();
+            if (opcion.Contains("Listar"))         await ListarAsync();
+            else if (opcion.Contains("Filtrar"))   await FiltrarPorEstadoAsync();
+            else if (opcion.Contains("Detalle"))   await VerDetalleAsync();
+            else if (opcion.Contains("Crear"))     await CrearAsync();
+            else if (opcion.Contains("Aprobar"))   await AprobarAsync();
+            else if (opcion.Contains("Mecánico"))  await AsignarMecanicoAsync();
+            else if (opcion.Contains("Finalizar")) await FinalizarAsync();
+            else if (opcion.Contains("Cancelar"))  await CancelarAsync();
         }
+    }
+
+    private List<string> BuildOpciones()
+    {
+        var lista = new List<string>
+        {
+            "  Listar Órdenes",
+            "  Filtrar por Estado",
+            "  Ver Detalle de Orden"
+        };
+
+        // Solo Recepcionista y JefeTaller crean órdenes
+        if (User.EsRecepcionista() || User.EsJefeTaller())
+            lista.Add("  Crear Orden");
+
+        // Solo JefeTaller aprueba el inicio del trabajo
+        if (User.EsJefeTaller())
+            lista.Add("  Aprobar Orden");
+
+        // Recepcionista y JefeTaller asignan mecánico
+        if (User.EsRecepcionista() || User.EsJefeTaller())
+            lista.Add("  Asignar Mecánico");
+
+        // JefeTaller y Mecánico finalizan
+        if (User.EsJefeTaller() || User.EsMecanico())
+            lista.Add("  Finalizar Orden");
+
+        // Solo JefeTaller y Recepcionista cancelan
+        if (User.EsJefeTaller() || User.EsRecepcionista())
+            lista.Add("  Cancelar Orden");
+
+        lista.Add("  Volver al Menú Principal");
+        return lista;
     }
 
     // ── Tabla de órdenes ────────────────────────────────────────────────────
@@ -61,7 +86,7 @@ public class OrdenesMenu : BaseMenu
                 $"[bold]{Markup.Escape(o.NumeroOrden)}[/]",
                 Markup.Escape(o.ClienteNombre ?? "-"),
                 Markup.Escape(o.VehiculoPlaca ?? "-"),
-                Markup.Escape(o.MecanicoNombre ?? "[grey]Sin asignar[/]"),
+                Markup.Escape(o.MecanicoNombre ?? "-"),
                 $"[{o.EstadoColor}]{Markup.Escape(o.EstadoTexto)}[/]",
                 o.FechaIngreso.ToString("dd/MM/yyyy"),
                 o.Total.HasValue ? $"$ {o.Total:N2}" : "[grey]-[/]"
@@ -75,22 +100,12 @@ public class OrdenesMenu : BaseMenu
 
     private async Task ListarAsync(int? estado = null)
     {
-        var titulo = estado.HasValue
-            ? $"Estado: {(EstadoOrden)estado}" : "Todas las órdenes";
-        PrintHeader("Órdenes de Servicio", titulo);
+        PrintHeader("Órdenes de Servicio", estado.HasValue ? $"Estado: {(EstadoOrden)estado}" : "Todas");
 
         PagedData<OrdenModel>? data = null;
-        await WithSpinner("Cargando órdenes", async () =>
-        {
-            data = await Api.GetOrdenesAsync(1, 20, estado);
-        });
+        await WithSpinner("Cargando órdenes", async () => { data = await Api.GetOrdenesAsync(1, 20, estado); });
 
-        if (data == null || data.Items.Count == 0)
-        {
-            NoData("No se encontraron órdenes.");
-            Pause();
-            return;
-        }
+        if (data == null || data.Items.Count == 0) { NoData("No se encontraron órdenes."); Pause(); return; }
 
         MostrarTablaOrdenes(data.Items);
         Info($"Mostrando {data.Items.Count} de {data.TotalCount} órdenes");
@@ -102,12 +117,8 @@ public class OrdenesMenu : BaseMenu
     private async Task FiltrarPorEstadoAsync()
     {
         PrintHeader("Filtrar por Estado");
-
-        var estadoStr = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title("[cyan]  Selecciona el estado:[/]")
-                .HighlightStyle(new Style(Color.Cyan1))
-                .AddChoices("Pendiente", "Aprobada", "EnProceso", "Finalizada", "Cancelada", "Todos"));
+        var estadoStr = Choice("  Selecciona el estado:",
+            "Pendiente", "Aprobada", "EnProceso", "Finalizada", "Cancelada", "Todos");
 
         int? estado = estadoStr switch
         {
@@ -118,7 +129,6 @@ public class OrdenesMenu : BaseMenu
             "Cancelada"  => 4,
             _ => null
         };
-
         await ListarAsync(estado);
     }
 
@@ -127,11 +137,10 @@ public class OrdenesMenu : BaseMenu
     private async Task VerDetalleAsync()
     {
         PrintHeader("Detalle de Orden");
-
-        var numero = AskRequired("Número de orden o ID (GUID):");
+        var numero = AskRequired("Número de orden:");
         OrdenModel? orden = null;
 
-        await WithSpinner("Buscando orden", async () =>
+        await WithSpinner("Buscando", async () =>
         {
             if (Guid.TryParse(numero, out var id))
                 orden = await Api.GetOrdenByIdAsync(id);
@@ -145,27 +154,24 @@ public class OrdenesMenu : BaseMenu
 
         if (orden == null) { NoData("Orden no encontrada."); Pause(); return; }
 
-        var grid = new Grid();
-        grid.AddColumn(); grid.AddColumn();
-
+        var grid = new Grid().AddColumn().AddColumn();
         void Row(string label, string value) =>
             grid.AddRow($"[grey]  {label}:[/]", $"[white]{value}[/]");
 
-        Row("Número", orden.NumeroOrden);
-        Row("Estado", $"[{orden.EstadoColor}]{orden.EstadoTexto}[/]");
-        Row("Cliente", orden.ClienteNombre ?? "-");
-        Row("Vehículo", orden.VehiculoPlaca ?? "-");
-        Row("Mecánico", orden.MecanicoNombre ?? "Sin asignar");
-        Row("Descripción", orden.Descripcion ?? "-");
+        Row("Numero",        orden.NumeroOrden);
+        Row("Estado",        $"[{orden.EstadoColor}]{orden.EstadoTexto}[/]");
+        Row("Cliente",       orden.ClienteNombre ?? "-");
+        Row("Vehiculo",      orden.VehiculoPlaca ?? "-");
+        Row("Mecanico",      orden.MecanicoNombre ?? "Sin asignar");
+        Row("Descripcion",   orden.Descripcion ?? "-");
         Row("Fecha Ingreso", orden.FechaIngreso.ToString("dd/MM/yyyy HH:mm"));
         if (orden.FechaFin.HasValue) Row("Fecha Fin", orden.FechaFin.Value.ToString("dd/MM/yyyy HH:mm"));
-        if (orden.Total.HasValue) Row("Total", $"$ {orden.Total:N2}");
+        if (orden.Total.HasValue)    Row("Total",     $"$ {orden.Total:N2}");
 
         AnsiConsole.Write(new Panel(grid)
             .Header($"[bold]  Orden #{Markup.Escape(orden.NumeroOrden)}[/]")
             .Border(BoxBorder.Rounded)
             .BorderStyle(Style.Parse("blue")));
-
         Pause();
     }
 
@@ -175,42 +181,58 @@ public class OrdenesMenu : BaseMenu
     {
         PrintHeader("Crear Orden de Servicio");
 
-        var clienteIdStr = AskRequired("ClienteId (GUID):");
-        if (!Guid.TryParse(clienteIdStr, out var clienteId)) { Error("GUID inválido."); Pause(); return; }
+        // Seleccionar cliente
+        PagedData<ClienteModel>? clientes = null;
+        await WithSpinner("Cargando clientes", async () => { clientes = await Api.GetClientesAsync(size: 50); });
 
-        var vehiculoIdStr = AskRequired("VehiculoId (GUID):");
-        if (!Guid.TryParse(vehiculoIdStr, out var vehiculoId)) { Error("GUID inválido."); Pause(); return; }
+        if (clientes == null || clientes.Items.Count == 0) { Error("No hay clientes registrados."); Pause(); return; }
+
+        var opClientes = clientes.Items.Select(c => $"{c.NombreCompleto} — {c.NumeroDocumento}").ToList();
+        opClientes.Add("Cancelar");
+        var selCliente = Choice("Selecciona el cliente:", opClientes.ToArray());
+        if (selCliente.Contains("Cancelar")) return;
+        var cliente = clientes.Items[opClientes.IndexOf(selCliente)];
+
+        // Seleccionar vehículo
+        PagedData<VehiculoModel>? vehiculos = null;
+        await WithSpinner("Cargando vehículos", async () => { vehiculos = await Api.GetVehiculosAsync(size: 50); });
+
+        if (vehiculos == null || vehiculos.Items.Count == 0) { Error("No hay vehículos registrados."); Pause(); return; }
+
+        var opVehiculos = vehiculos.Items.Select(v => $"{v.Placa} — {v.MarcaModelo} ({v.Anio})").ToList();
+        opVehiculos.Add("Cancelar");
+        var selVehiculo = Choice("Selecciona el vehículo:", opVehiculos.ToArray());
+        if (selVehiculo.Contains("Cancelar")) return;
+        var vehiculo = vehiculos.Items[opVehiculos.IndexOf(selVehiculo)];
 
         var desc = Ask("Descripción del trabajo (opcional):");
-
-        Info("TipoServicioId es opcional. Déjalo vacío para omitir.");
-        var tipoIdStr = Ask("TipoServicioId (GUID, opcional):");
-        Guid? tipoId = null;
-        if (!string.IsNullOrEmpty(tipoIdStr) && Guid.TryParse(tipoIdStr, out var tid)) tipoId = tid;
-
-        AnsiConsole.WriteLine();
-        if (!Confirm("¿Crear la orden?")) return;
+        if (!Confirm("Confirmar creacion de orden?")) return;
 
         OrdenModel? created = null;
         await WithSpinner("Creando orden", async () =>
         {
             created = await Api.CreateOrdenAsync(new
             {
-                ClienteId = clienteId,
-                VehiculoId = vehiculoId,
-                Descripcion = string.IsNullOrEmpty(desc) ? null : desc,
-                TipoServicioId = tipoId
+                ClienteId = cliente.Id,
+                VehiculoId = vehiculo.Id,
+                Descripcion = string.IsNullOrEmpty(desc) ? null : desc
             });
         });
 
         if (created != null)
         {
-            Ok($"Orden [bold]{Markup.Escape(created.NumeroOrden)}[/] creada en estado [yellow]Pendiente[/].");
-            AnsiConsole.MarkupLine($"[grey]  ID asignado:[/] [cyan]{created.Id}[/]");
+            AnsiConsole.WriteLine();
+            AnsiConsole.Write(new Panel(
+                $"[grey]Numero:[/]  [bold cyan]{Markup.Escape(created.NumeroOrden)}[/]\n" +
+                $"[grey]Cliente:[/] [white]{Markup.Escape(cliente.NombreCompleto)}[/]\n" +
+                $"[grey]Placa:[/]   [white]{Markup.Escape(vehiculo.Placa)}[/]\n" +
+                $"[grey]Estado:[/]  [yellow]Pendiente[/]")
+                .Header("[bold green]  Orden Creada[/]")
+                .Border(BoxBorder.Rounded)
+                .BorderStyle(Style.Parse("green")));
         }
         else
             Error("No se pudo crear la orden.");
-
         Pause();
     }
 
@@ -218,21 +240,21 @@ public class OrdenesMenu : BaseMenu
 
     private async Task AprobarAsync()
     {
-        PrintHeader("Aprobar Orden");
+        PrintHeader("Aprobar Orden — Iniciar Trabajo");
 
         var orden = await SeleccionarOrdenAsync(0); // Pendiente
         if (orden == null) return;
 
-        var clienteIdStr = AskRequired($"ClienteId que aprueba (GUID) [{orden.ClienteId}]:");
-        if (!Guid.TryParse(clienteIdStr, out var clienteId)) clienteId = orden.ClienteId;
+        if (!Confirm($"Aprobar [{orden.NumeroOrden}] e iniciar el proceso de trabajo?")) return;
 
-        if (!Confirm($"¿Aprobar la orden {orden.NumeroOrden}?")) return;
+        var (ok, error) = (false, "");
+        await WithSpinner("Aprobando", async () =>
+        {
+            (ok, error) = await Api.AprobarOrdenAsync(orden.Id, orden.ClienteId);
+        });
 
-        (bool ok, string? error) result = (false, null);
-        await WithSpinner("Aprobando", async () => { result = await Api.AprobarOrdenAsync(orden.Id, clienteId); });
-
-        if (result.ok) Ok("Orden aprobada correctamente.");
-        else Error(result.error ?? "Error al aprobar.");
+        if (ok) Ok("Orden aprobada. Ya puede asignarse mecánico y crear Mini-Órdenes.");
+        else Error(error ?? "Error al aprobar.");
         Pause();
     }
 
@@ -240,56 +262,29 @@ public class OrdenesMenu : BaseMenu
 
     private async Task AsignarMecanicoAsync()
     {
-        PrintHeader("Asignar Mecánico");
+        PrintHeader("Asignar Mecánico a Orden");
 
         var orden = await SeleccionarOrdenAsync();
         if (orden == null) return;
 
-        // Cargar empleados
         PagedData<EmpleadoModel>? empleados = null;
-        await WithSpinner("Cargando mecánicos", async () =>
-        {
-            empleados = await Api.GetEmpleadosAsync();
-        });
+        await WithSpinner("Cargando mecánicos", async () => { empleados = await Api.GetEmpleadosAsync(); });
 
-        Guid empleadoId;
+        if (empleados == null || empleados.Items.Count == 0) { Error("No hay empleados registrados."); Pause(); return; }
 
-        if (empleados?.Items.Count > 0)
-        {
-            var opciones = empleados.Items.Select(e => $"{e.NombreCompleto} [{e.Id}]").ToList();
-            opciones.Add("Ingresar ID manualmente");
+        var opciones = empleados.Items.Select(e => $"{e.NombreCompleto}").ToList();
+        opciones.Add("Cancelar");
+        var sel = Choice("Selecciona el mecánico:", opciones.ToArray());
+        if (sel.Contains("Cancelar")) return;
 
-            var sel = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("[cyan]  Selecciona el mecánico:[/]")
-                    .PageSize(10)
-                    .HighlightStyle(new Style(Color.Cyan1))
-                    .AddChoices(opciones));
+        var empleado = empleados.Items[opciones.IndexOf(sel)];
+        if (!Confirm($"Asignar [{empleado.NombreCompleto}] a [{orden.NumeroOrden}]?")) return;
 
-            if (sel == "Ingresar ID manualmente")
-            {
-                var idStr = AskRequired("EmpleadoId (GUID):");
-                if (!Guid.TryParse(idStr, out empleadoId)) { Error("GUID inválido."); Pause(); return; }
-            }
-            else
-            {
-                var emp = empleados.Items[opciones.IndexOf(sel)];
-                empleadoId = emp.Id;
-            }
-        }
-        else
-        {
-            var idStr = AskRequired("EmpleadoId (GUID):");
-            if (!Guid.TryParse(idStr, out empleadoId)) { Error("GUID inválido."); Pause(); return; }
-        }
+        var (ok, error) = (false, "");
+        await WithSpinner("Asignando", async () => { (ok, error) = await Api.AsignarMecanicoAsync(orden.Id, empleado.Id); });
 
-        if (!Confirm($"¿Asignar mecánico a la orden {orden.NumeroOrden}?")) return;
-
-        (bool ok, string? error) result = (false, null);
-        await WithSpinner("Asignando", async () => { result = await Api.AsignarMecanicoAsync(orden.Id, empleadoId); });
-
-        if (result.ok) Ok("Mecánico asignado correctamente.");
-        else Error(result.error ?? "Error al asignar.");
+        if (ok) Ok($"Mecánico asignado correctamente a {orden.NumeroOrden}.");
+        else Error(error ?? "Error al asignar.");
         Pause();
     }
 
@@ -302,13 +297,13 @@ public class OrdenesMenu : BaseMenu
         var orden = await SeleccionarOrdenAsync(2); // EnProceso
         if (orden == null) return;
 
-        if (!Confirm($"¿Finalizar la orden {orden.NumeroOrden}? Se marcará como completada.")) return;
+        if (!Confirm($"Marcar [{orden.NumeroOrden}] como FINALIZADA?")) return;
 
-        (bool ok, string? error) result = (false, null);
-        await WithSpinner("Finalizando", async () => { result = await Api.FinalizarOrdenAsync(orden.Id); });
+        var (ok, error) = (false, "");
+        await WithSpinner("Finalizando", async () => { (ok, error) = await Api.FinalizarOrdenAsync(orden.Id); });
 
-        if (result.ok) Ok("Orden finalizada correctamente. Ya puede generarse factura.");
-        else Error(result.error ?? "Error al finalizar.");
+        if (ok) Ok("Orden finalizada. Puede generarse la factura.");
+        else Error(error ?? "Error al finalizar.");
         Pause();
     }
 
@@ -321,34 +316,26 @@ public class OrdenesMenu : BaseMenu
         var orden = await SeleccionarOrdenAsync();
         if (orden == null) return;
 
-        var motivo = AskRequired("Motivo de cancelación:");
+        Warn("Esta accion no puede deshacerse.");
+        var motivo = AskRequired("Motivo de cancelacion:");
+        if (!Confirm($"Cancelar la orden [{orden.NumeroOrden}]?")) return;
 
-        if (!Confirm($"¿Cancelar la orden {orden.NumeroOrden}?")) return;
+        var (ok, error) = (false, "");
+        await WithSpinner("Cancelando", async () => { (ok, error) = await Api.CancelarOrdenAsync(orden.Id, motivo); });
 
-        (bool ok, string? error) result = (false, null);
-        await WithSpinner("Cancelando", async () => { result = await Api.CancelarOrdenAsync(orden.Id, motivo); });
-
-        if (result.ok) Ok("Orden cancelada.");
-        else Error(result.error ?? "Error al cancelar.");
+        if (ok) Ok("Orden cancelada.");
+        else Error(error ?? "Error al cancelar.");
         Pause();
     }
 
-    // ── Helper: Seleccionar orden de una lista ───────────────────────────────
+    // ── Helper ──────────────────────────────────────────────────────────────
 
     private async Task<OrdenModel?> SeleccionarOrdenAsync(int? estadoFiltro = null)
     {
         PagedData<OrdenModel>? data = null;
-        await WithSpinner("Cargando órdenes", async () =>
-        {
-            data = await Api.GetOrdenesAsync(1, 50, estadoFiltro);
-        });
+        await WithSpinner("Cargando órdenes", async () => { data = await Api.GetOrdenesAsync(1, 50, estadoFiltro); });
 
-        if (data == null || data.Items.Count == 0)
-        {
-            NoData("No se encontraron órdenes.");
-            Pause();
-            return null;
-        }
+        if (data == null || data.Items.Count == 0) { NoData("No se encontraron órdenes."); Pause(); return null; }
 
         var opciones = data.Items
             .Select(o => $"[{o.EstadoColor}]{o.NumeroOrden}[/]  {o.ClienteNombre ?? "-"}  |  {o.VehiculoPlaca ?? "-"}  |  {o.EstadoTexto}")

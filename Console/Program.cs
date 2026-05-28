@@ -58,24 +58,33 @@ if (!apiOk)
     return;
 }
 
-// ── Login ─────────────────────────────────────────────────────────────────────
+// ── Loop de sesiones — vuelve al login al cerrar sesión ───────────────────────
 
 var authMenu = new AuthMenu(api);
-var authResult = await authMenu.ShowAsync();
 
-if (authResult == null)
+while (true)
 {
+    var authResult = await authMenu.ShowAsync();
+
+    // El usuario eligió "Salir" desde la pantalla de login
+    if (authResult == null)
+    {
+        AnsiConsole.Clear();
+        AnsiConsole.Write(new FigletText("Hasta luego").Color(Color.Grey));
+        AnsiConsole.MarkupLine("\n[grey]  AutoTaller Manager — sesión finalizada.[/]\n");
+        await Task.Delay(800);
+        break;
+    }
+
+    // Sesión activa — mostrar menú principal
+    var mainMenu = new MainMenu(api, authResult);
+    await mainMenu.ShowAsync();
+
+    // Al salir del menú principal el token ya fue limpiado en MainMenu
+    // Mostramos mensaje y volvemos al login
     AnsiConsole.Clear();
-    AnsiConsole.MarkupLine("[grey]¡Hasta luego![/]");
-    await Task.Delay(800);
-    return;
+    AnsiConsole.Write(new Rule("[grey]Sesión cerrada[/]").RuleStyle("grey"));
+    AnsiConsole.MarkupLine(
+        $"[grey]  Hasta luego, [cyan]{Markup.Escape(authResult.Nombres)}[/]. Volviendo al inicio...[/]");
+    await Task.Delay(1200);
 }
-
-// ── Menú Principal ────────────────────────────────────────────────────────────
-
-var mainMenu = new MainMenu(api, authResult);
-await mainMenu.ShowAsync();
-
-AnsiConsole.Clear();
-AnsiConsole.Write(new Rule("[grey]Sesión finalizada[/]").RuleStyle("grey"));
-AnsiConsole.MarkupLine($"\n[grey]  Hasta luego, [cyan]{authResult.Nombres}[/]![/]\n");

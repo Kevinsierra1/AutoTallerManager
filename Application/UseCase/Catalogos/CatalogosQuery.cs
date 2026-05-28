@@ -198,6 +198,77 @@ public class GetConfiguracionesQueryHandler : IRequestHandler<GetConfiguraciones
     }
 }
 
+// ── Tipos de Documento ────────────────────────────────────────────────────────
+
+public record TipoDocumentoItemDto(Guid Id, string Nombre, string? Abreviatura);
+public record GetTiposDocumentoQuery : IRequest<List<TipoDocumentoItemDto>>;
+
+public class GetTiposDocumentoQueryHandler : IRequestHandler<GetTiposDocumentoQuery, List<TipoDocumentoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetTiposDocumentoQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<TipoDocumentoItemDto>> Handle(GetTiposDocumentoQuery request, CancellationToken ct) =>
+        await _context.TiposDocumento
+            .Where(t => !t.Eliminado)
+            .OrderBy(t => t.Nombre)
+            .Select(t => new TipoDocumentoItemDto(t.Id, t.Nombre, t.Abreviatura))
+            .ToListAsync(ct);
+}
+
+// ── Tipos de Servicio ─────────────────────────────────────────────────────────
+
+public record TipoServicioItemDto(Guid Id, string Nombre, string? Descripcion, decimal? PrecioBase, bool Activo);
+public record GetTiposServicioQuery : IRequest<List<TipoServicioItemDto>>;
+
+public class GetTiposServicioQueryHandler : IRequestHandler<GetTiposServicioQuery, List<TipoServicioItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetTiposServicioQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<TipoServicioItemDto>> Handle(GetTiposServicioQuery request, CancellationToken ct) =>
+        await _context.TiposServicio
+            .Where(t => !t.Eliminado)
+            .OrderBy(t => t.Nombre)
+            .Select(t => new TipoServicioItemDto(t.Id, t.Nombre, t.Descripcion, t.PrecioBase, t.Activo))
+            .ToListAsync(ct);
+}
+
+// ── Métodos de Pago ───────────────────────────────────────────────────────────
+
+public record GetMetodosPagoQuery : IRequest<List<CatalogoItemDto>>;
+
+public class GetMetodosPagoQueryHandler : IRequestHandler<GetMetodosPagoQuery, List<CatalogoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetMetodosPagoQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<CatalogoItemDto>> Handle(GetMetodosPagoQuery request, CancellationToken ct) =>
+        await _context.MetodosPago
+            .Where(m => m.Activo && !m.Eliminado)
+            .OrderBy(m => m.Nombre)
+            .Select(m => new CatalogoItemDto(m.Id, m.Nombre))
+            .ToListAsync(ct);
+}
+
+// ── Categorías de Repuesto ────────────────────────────────────────────────────
+
+public record CategoriaRepuestoItemDto(Guid Id, string Nombre, string? Descripcion);
+public record GetCategoriasRepuestoQuery : IRequest<List<CategoriaRepuestoItemDto>>;
+
+public class GetCategoriasRepuestoQueryHandler : IRequestHandler<GetCategoriasRepuestoQuery, List<CategoriaRepuestoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetCategoriasRepuestoQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<CategoriaRepuestoItemDto>> Handle(GetCategoriasRepuestoQuery request, CancellationToken ct) =>
+        await _context.CategoriasRepuesto
+            .Where(c => !c.Eliminado)
+            .OrderBy(c => c.Nombre)
+            .Select(c => new CategoriaRepuestoItemDto(c.Id, c.Nombre, c.Descripcion))
+            .ToListAsync(ct);
+}
+
 // ── Permisos ──────────────────────────────────────────────────────────────────
 
 public record PermisoItemDto(Guid Id, string Nombre, string Clave, string? Modulo);
