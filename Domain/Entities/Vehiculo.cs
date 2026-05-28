@@ -8,6 +8,10 @@ public class Vehiculo : BaseEntity
     public ModeloVehiculo ModeloVehiculo { get; set; } = null!;
     public Guid? ColorId { get; set; }
     public Color? Color { get; set; }
+    public Guid? TipoCombustibleId { get; set; }
+    public TipoCombustible? TipoCombustible { get; set; }
+    public Guid? TipoTransmisionId { get; set; }
+    public TipoTransmision? TipoTransmision { get; set; }
     public int Anio { get; set; }
     public string? NumeroMotor { get; set; }
     public string? NumeroChasis { get; set; }
@@ -16,4 +20,8 @@ public class Vehiculo : BaseEntity
     public bool Activo { get; set; } = true;
     public ICollection<VehiculoPropietario>? Propietarios { get; set; }
     public ICollection<OrdenServicio>? Ordenes { get; set; }
+    public ICollection<VehiculoKilometraje>? Kilometrajes { get; set; }
+    public ICollection<VehiculoFoto>? Fotos { get; set; }
+    public ICollection<VehiculoMantenimiento>? Mantenimientos { get; set; }
+    public ICollection<VehiculoDocumento>? Documentos { get; set; }
 }

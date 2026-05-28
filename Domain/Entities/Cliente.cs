@@ -17,4 +17,7 @@ public class Cliente : BaseEntity
     public ICollection<VehiculoPropietario>? VehiculoPropietarios { get; set; }
     public ICollection<OrdenServicio>? Ordenes { get; set; }
     public ICollection<Factura>? Facturas { get; set; }
+    public ICollection<DireccionCliente>? Direcciones { get; set; }
+    public ICollection<TelefonoCliente>? Telefonos { get; set; }
+    public ICollection<CorreoCliente>? Correos { get; set; }
 }

@@ -12,4 +12,5 @@ public class Cita : BaseEntity
     public string Motivo { get; set; } = string.Empty;
     public EstadoCitaEnum Estado { get; set; } = EstadoCitaEnum.Pendiente;
     public string? Observaciones { get; set; }
+    public ICollection<HistorialCita>? Historial { get; set; }
 }

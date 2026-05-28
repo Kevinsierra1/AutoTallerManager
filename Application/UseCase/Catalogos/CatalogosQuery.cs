@@ -9,6 +9,9 @@ namespace Application.UseCase.Catalogos;
 public record CatalogoItemDto(Guid Id, string Nombre);
 public record ModeloItemDto(Guid Id, string Nombre, Guid MarcaId, string MarcaNombre);
 public record ColorItemDto(Guid Id, string Nombre, string? CodigoHex);
+public record EstadoOrdenItemDto(Guid Id, string Nombre, int Codigo, string? Descripcion);
+public record PrioridadOrdenItemDto(Guid Id, string Nombre, int Nivel, string? Descripcion);
+public record ConfiguracionItemDto(Guid Id, string Clave, string Valor, string Tipo, string? Grupo);
 
 // ── Marcas ────────────────────────────────────────────────────────────────────
 
@@ -61,4 +64,157 @@ public class GetColoresQueryHandler : IRequestHandler<GetColoresQuery, List<Colo
             .OrderBy(c => c.Nombre)
             .Select(c => new ColorItemDto(c.Id, c.Nombre, c.CodigoHex))
             .ToListAsync(cancellationToken);
+}
+
+// ── Estados de Orden ──────────────────────────────────────────────────────────
+
+public record GetEstadosOrdenQuery : IRequest<List<EstadoOrdenItemDto>>;
+
+public class GetEstadosOrdenQueryHandler : IRequestHandler<GetEstadosOrdenQuery, List<EstadoOrdenItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetEstadosOrdenQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<EstadoOrdenItemDto>> Handle(GetEstadosOrdenQuery request, CancellationToken ct) =>
+        await _context.EstadosOrden.Where(e => e.Activo)
+            .OrderBy(e => e.Codigo)
+            .Select(e => new EstadoOrdenItemDto(e.Id, e.Nombre, e.Codigo, e.Descripcion))
+            .ToListAsync(ct);
+}
+
+// ── Estados de Cita ───────────────────────────────────────────────────────────
+
+public record GetEstadosCitaQuery : IRequest<List<CatalogoItemDto>>;
+
+public class GetEstadosCitaQueryHandler : IRequestHandler<GetEstadosCitaQuery, List<CatalogoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetEstadosCitaQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<CatalogoItemDto>> Handle(GetEstadosCitaQuery request, CancellationToken ct) =>
+        await _context.EstadosCita.Where(e => e.Activo)
+            .OrderBy(e => e.Nombre)
+            .Select(e => new CatalogoItemDto(e.Id, e.Nombre))
+            .ToListAsync(ct);
+}
+
+// ── Estados de Factura ────────────────────────────────────────────────────────
+
+public record GetEstadosFacturaQuery : IRequest<List<CatalogoItemDto>>;
+
+public class GetEstadosFacturaQueryHandler : IRequestHandler<GetEstadosFacturaQuery, List<CatalogoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetEstadosFacturaQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<CatalogoItemDto>> Handle(GetEstadosFacturaQuery request, CancellationToken ct) =>
+        await _context.EstadosFactura.Where(e => e.Activo)
+            .OrderBy(e => e.Nombre)
+            .Select(e => new CatalogoItemDto(e.Id, e.Nombre))
+            .ToListAsync(ct);
+}
+
+// ── Prioridades de Orden ──────────────────────────────────────────────────────
+
+public record GetPrioridadesOrdenQuery : IRequest<List<PrioridadOrdenItemDto>>;
+
+public class GetPrioridadesOrdenQueryHandler : IRequestHandler<GetPrioridadesOrdenQuery, List<PrioridadOrdenItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetPrioridadesOrdenQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<PrioridadOrdenItemDto>> Handle(GetPrioridadesOrdenQuery request, CancellationToken ct) =>
+        await _context.PrioridadesOrden.Where(p => p.Activo)
+            .OrderBy(p => p.Nivel)
+            .Select(p => new PrioridadOrdenItemDto(p.Id, p.Nombre, p.Nivel, p.Descripcion))
+            .ToListAsync(ct);
+}
+
+// ── Tipos de Combustible ──────────────────────────────────────────────────────
+
+public record GetTiposCombustibleQuery : IRequest<List<CatalogoItemDto>>;
+
+public class GetTiposCombustibleQueryHandler : IRequestHandler<GetTiposCombustibleQuery, List<CatalogoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetTiposCombustibleQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<CatalogoItemDto>> Handle(GetTiposCombustibleQuery request, CancellationToken ct) =>
+        await _context.TiposCombustible.Where(t => t.Activo)
+            .OrderBy(t => t.Nombre)
+            .Select(t => new CatalogoItemDto(t.Id, t.Nombre))
+            .ToListAsync(ct);
+}
+
+// ── Tipos de Transmisión ──────────────────────────────────────────────────────
+
+public record GetTiposTransmisionQuery : IRequest<List<CatalogoItemDto>>;
+
+public class GetTiposTransmisionQueryHandler : IRequestHandler<GetTiposTransmisionQuery, List<CatalogoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetTiposTransmisionQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<CatalogoItemDto>> Handle(GetTiposTransmisionQuery request, CancellationToken ct) =>
+        await _context.TiposTransmision.Where(t => t.Activo)
+            .OrderBy(t => t.Nombre)
+            .Select(t => new CatalogoItemDto(t.Id, t.Nombre))
+            .ToListAsync(ct);
+}
+
+// ── Tipos Movimiento Inventario ───────────────────────────────────────────────
+
+public record GetTiposMovInventarioQuery : IRequest<List<CatalogoItemDto>>;
+
+public class GetTiposMovInventarioQueryHandler : IRequestHandler<GetTiposMovInventarioQuery, List<CatalogoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetTiposMovInventarioQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<CatalogoItemDto>> Handle(GetTiposMovInventarioQuery request, CancellationToken ct) =>
+        await _context.TiposMovimientoInventario.Where(t => t.Activo)
+            .OrderBy(t => t.Nombre)
+            .Select(t => new CatalogoItemDto(t.Id, t.Nombre))
+            .ToListAsync(ct);
+}
+
+// ── Configuraciones del Sistema ───────────────────────────────────────────────
+
+public record GetConfiguracionesQuery(string? Grupo = null) : IRequest<List<ConfiguracionItemDto>>;
+
+public class GetConfiguracionesQueryHandler : IRequestHandler<GetConfiguracionesQuery, List<ConfiguracionItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetConfiguracionesQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<ConfiguracionItemDto>> Handle(GetConfiguracionesQuery request, CancellationToken ct)
+    {
+        var q = _context.ConfiguracionesSistema.Where(c => c.Activo).AsQueryable();
+        if (!string.IsNullOrEmpty(request.Grupo))
+            q = q.Where(c => c.Grupo == request.Grupo);
+        return await q.OrderBy(c => c.Grupo).ThenBy(c => c.Clave)
+            .Select(c => new ConfiguracionItemDto(c.Id, c.Clave, c.Valor, c.Tipo, c.Grupo))
+            .ToListAsync(ct);
+    }
+}
+
+// ── Permisos ──────────────────────────────────────────────────────────────────
+
+public record PermisoItemDto(Guid Id, string Nombre, string Clave, string? Modulo);
+public record GetPermisosQuery(string? Modulo = null) : IRequest<List<PermisoItemDto>>;
+
+public class GetPermisosQueryHandler : IRequestHandler<GetPermisosQuery, List<PermisoItemDto>>
+{
+    private readonly IApplicationDbContext _context;
+    public GetPermisosQueryHandler(IApplicationDbContext context) => _context = context;
+
+    public async Task<List<PermisoItemDto>> Handle(GetPermisosQuery request, CancellationToken ct)
+    {
+        var q = _context.Permisos.Where(p => p.Activo).AsQueryable();
+        if (!string.IsNullOrEmpty(request.Modulo))
+            q = q.Where(p => p.Modulo == request.Modulo);
+        return await q.OrderBy(p => p.Modulo).ThenBy(p => p.Nombre)
+            .Select(p => new PermisoItemDto(p.Id, p.Nombre, p.Clave, p.Modulo))
+            .ToListAsync(ct);
+    }
 }

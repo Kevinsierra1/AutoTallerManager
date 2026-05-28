@@ -9,4 +9,7 @@ public class Usuario : BaseEntity
     public bool Activo { get; set; } = true;
     public ICollection<UsuarioRol> UsuarioRoles { get; set; } = new List<UsuarioRol>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<SesionUsuario>? Sesiones { get; set; }
+    public ICollection<HistorialAcceso>? HistorialAccesos { get; set; }
+    public ICollection<Notificacion>? Notificaciones { get; set; }
 }

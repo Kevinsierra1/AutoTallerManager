@@ -11,6 +11,8 @@ public class OrdenServicio : BaseEntity
     public Vehiculo Vehiculo { get; set; } = null!;
     public Guid? MecanicoId { get; set; }
     public Empleado? Mecanico { get; set; }
+    public Guid? PrioridadOrdenId { get; set; }
+    public PrioridadOrden? PrioridadOrden { get; set; }
     public EstadoOrdenEnum Estado { get; set; } = EstadoOrdenEnum.Pendiente;
     public string? Descripcion { get; set; }
     public DateTime FechaIngreso { get; set; } = DateTime.UtcNow;
@@ -20,4 +22,5 @@ public class OrdenServicio : BaseEntity
     public ICollection<ManoObra>? ManosObra { get; set; }
     public ICollection<HistorialEstadoOrden>? HistorialEstados { get; set; }
     public ICollection<AprobacionOrden>? Aprobaciones { get; set; }
+    public ICollection<OrdenServicioExtra>? Extras { get; set; }
 }

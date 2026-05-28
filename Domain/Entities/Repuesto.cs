@@ -16,4 +16,7 @@ public class Repuesto : BaseEntity
     public ICollection<MovimientoInventario>? Movimientos { get; set; }
     public ICollection<ProveedorRepuesto>? ProveedorRepuestos { get; set; }
     public ICollection<DetalleOrdenServicio>? DetallesOrden { get; set; }
+    public ICollection<HistorialPrecioRepuesto>? HistorialPrecios { get; set; }
+    public ICollection<EntradaInventario>? Entradas { get; set; }
+    public ICollection<SalidaInventario>? Salidas { get; set; }
 }

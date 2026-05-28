@@ -11,7 +11,11 @@ public class Factura : BaseEntity
     public decimal Impuestos { get; set; }
     public decimal Descuento { get; set; }
     public decimal Total { get; set; }
+    public Guid? EstadoFacturaId { get; set; }
+    public EstadoFactura? EstadoFactura { get; set; }
     public bool Pagada { get; set; } = false;
     public DateTime FechaEmision { get; set; } = DateTime.UtcNow;
     public ICollection<Pago>? Pagos { get; set; }
+    public ICollection<DetalleFactura>? Detalles { get; set; }
+    public ICollection<ImpuestoFactura>? FacturaImpuestos { get; set; }
 }
