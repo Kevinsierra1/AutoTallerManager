@@ -7,7 +7,7 @@ using Domain.Enums;
 
 namespace Application.UseCase.MiniOrdenes;
 
-public record CreateMiniOrdenCommand(CreateMiniOrdenDto Dto, Guid MecanicoId) : IRequest<MiniOrdenDto>;
+public record CreateMiniOrdenCommand(CreatePresupuestoDto Dto, Guid MecanicoId) : IRequest<MiniOrdenDto>;
 
 public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenCommand, MiniOrdenDto>
 {
@@ -17,16 +17,21 @@ public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenComm
     public async Task<MiniOrdenDto> Handle(CreateMiniOrdenCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
-        var orden = await _context.OrdenesServicio.FindAsync([dto.OrdenServicioId], cancellationToken)
-            ?? throw new NotFoundException("OrdenServicio", dto.OrdenServicioId);
+
+        _ = await _context.Clientes.FindAsync([dto.ClienteId], cancellationToken)
+            ?? throw new NotFoundException("Cliente", dto.ClienteId);
+
+        _ = await _context.Vehiculos.FindAsync([dto.VehiculoId], cancellationToken)
+            ?? throw new NotFoundException("Vehículo", dto.VehiculoId);
 
         var contador = await _context.MiniOrdenes.CountAsync(cancellationToken);
-        var miniOrden = new MiniOrden
+        var presupuesto = new MiniOrden
         {
             Id = Guid.NewGuid(),
-            NumeroMiniOrden = $"MO-{DateTime.UtcNow:yyyyMMdd}-{contador + 1:D4}",
-            OrdenServicioId = dto.OrdenServicioId,
-            OrdenAreaId = dto.OrdenAreaId,
+            NumeroMiniOrden = $"PRES-{DateTime.UtcNow:yyyyMMdd}-{contador + 1:D4}",
+            ClienteId = dto.ClienteId,
+            VehiculoId = dto.VehiculoId,
+            OrdenServicioId = null,   // se asigna cuando el cliente apruebe
             Descripcion = dto.Descripcion,
             Estado = EstadoMiniOrden.Borrador,
             MecanicoId = request.MecanicoId,
@@ -35,31 +40,34 @@ public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenComm
         };
 
         decimal totalMat = 0;
-        foreach (var detalle in dto.Detalles)
+        if (dto.Detalles?.Count > 0)
         {
-            var subtotal = detalle.Cantidad * detalle.PrecioUnitario;
-            totalMat += subtotal;
-            miniOrden.Detalles = miniOrden.Detalles ?? new List<MiniOrdenDetalle>();
-            ((List<MiniOrdenDetalle>)miniOrden.Detalles).Add(new MiniOrdenDetalle
+            presupuesto.Detalles = new List<MiniOrdenDetalle>();
+            foreach (var d in dto.Detalles)
             {
-                Id = Guid.NewGuid(),
-                RepuestoId = detalle.RepuestoId,
-                Cantidad = detalle.Cantidad,
-                PrecioUnitario = detalle.PrecioUnitario,
-                Subtotal = subtotal,
-                CreadoEn = DateTime.UtcNow
-            });
+                var subtotal = d.Cantidad * d.PrecioUnitario;
+                totalMat += subtotal;
+                ((List<MiniOrdenDetalle>)presupuesto.Detalles).Add(new MiniOrdenDetalle
+                {
+                    Id = Guid.NewGuid(),
+                    RepuestoId = d.RepuestoId,
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.PrecioUnitario,
+                    Subtotal = subtotal,
+                    CreadoEn = DateTime.UtcNow
+                });
+            }
         }
 
         decimal totalMO = 0;
-        if (dto.ManosObra != null)
+        if (dto.ManosObra?.Count > 0)
         {
+            presupuesto.ManosObra = new List<MiniOrdenManoObra>();
             foreach (var mo in dto.ManosObra)
             {
                 var total = mo.HorasTrabajo * mo.TarifaHora;
                 totalMO += total;
-                miniOrden.ManosObra = miniOrden.ManosObra ?? new List<MiniOrdenManoObra>();
-                ((List<MiniOrdenManoObra>)miniOrden.ManosObra).Add(new MiniOrdenManoObra
+                ((List<MiniOrdenManoObra>)presupuesto.ManosObra).Add(new MiniOrdenManoObra
                 {
                     Id = Guid.NewGuid(),
                     Descripcion = mo.Descripcion,
@@ -72,19 +80,19 @@ public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenComm
             }
         }
 
-        miniOrden.TotalMateriales = totalMat;
-        miniOrden.TotalManoObra = totalMO;
-        miniOrden.Total = totalMat + totalMO;
+        presupuesto.TotalMateriales = totalMat;
+        presupuesto.TotalManoObra = totalMO;
+        presupuesto.Total = totalMat + totalMO;
 
-        _context.MiniOrdenes.Add(miniOrden);
+        _context.MiniOrdenes.Add(presupuesto);
 
         _context.MiniOrdenHistoriales.Add(new MiniOrdenHistorial
         {
             Id = Guid.NewGuid(),
-            MiniOrdenId = miniOrden.Id,
+            MiniOrdenId = presupuesto.Id,
             EstadoAnterior = EstadoMiniOrden.Borrador,
             EstadoNuevo = EstadoMiniOrden.Borrador,
-            Observacion = "Mini-orden creada por mecánico",
+            Observacion = "Presupuesto creado por mecánico",
             NivelAprobacion = NivelAprobacionMJC.Mecanico,
             Fecha = DateTime.UtcNow,
             CreadoEn = DateTime.UtcNow
@@ -93,6 +101,6 @@ public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenComm
         await _context.SaveChangesAsync(cancellationToken);
 
         return await new GetMiniOrdenByIdQueryHandler(_context)
-            .Handle(new GetMiniOrdenByIdQuery(miniOrden.Id), cancellationToken);
+            .Handle(new GetMiniOrdenByIdQuery(presupuesto.Id), cancellationToken);
     }
 }

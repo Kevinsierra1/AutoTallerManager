@@ -19,8 +19,12 @@ public class MiniOrdenConfiguration : IEntityTypeConfiguration<MiniOrden>
         b.Property(x => x.Observaciones).HasMaxLength(2000);
         b.Property(x => x.MotivoRechazo).HasMaxLength(1000);
 
+        b.HasOne(x => x.Cliente).WithMany()
+            .HasForeignKey(x => x.ClienteId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Vehiculo).WithMany()
+            .HasForeignKey(x => x.VehiculoId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.OrdenServicio).WithMany(o => o.MiniOrdenes)
-            .HasForeignKey(x => x.OrdenServicioId).OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(x => x.OrdenServicioId).OnDelete(DeleteBehavior.SetNull);
         b.HasOne(x => x.OrdenArea).WithMany(a => a.MiniOrdenes)
             .HasForeignKey(x => x.OrdenAreaId).OnDelete(DeleteBehavior.SetNull);
         b.HasOne(x => x.Mecanico).WithMany()

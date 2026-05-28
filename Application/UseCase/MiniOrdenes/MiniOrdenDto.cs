@@ -4,14 +4,24 @@ namespace Application.UseCase.MiniOrdenes;
 
 public record MiniOrdenDto(
     Guid Id,
-    string NumeroMiniOrden,
-    Guid OrdenServicioId,
-    string NumeroOrden,
+    string NumeroPresupuesto,
+    // Cliente y vehículo — base del presupuesto
+    Guid ClienteId,
+    string ClienteNombre,
+    Guid VehiculoId,
+    string VehiculoPlaca,
+    string VehiculoDescripcion,
+    // Orden de servicio — solo existe si el cliente aprobó
+    Guid? OrdenServicioId,
+    string? NumeroOrden,
+    // Área (opcional)
     Guid? OrdenAreaId,
     string? AreaNombre,
+    // Descripción y estado
     string Descripcion,
     EstadoMiniOrden Estado,
     string EstadoNombre,
+    // Flujo M-J-C
     Guid? MecanicoId,
     string? MecanicoNombre,
     Guid? JefeTallerId,
@@ -20,6 +30,7 @@ public record MiniOrdenDto(
     DateTime? FechaAprobacionCliente,
     DateTime? FechaInicio,
     DateTime? FechaFin,
+    // Totales
     decimal TotalMateriales,
     decimal TotalManoObra,
     decimal Total,
@@ -50,9 +61,11 @@ public record MiniOrdenManoObraDto(
     string? TecnicoNombre
 );
 
-public record CreateMiniOrdenDto(
-    Guid OrdenServicioId,
-    Guid? OrdenAreaId,
+// ── DTOs de entrada ───────────────────────────────────────────────────────────
+
+public record CreatePresupuestoDto(
+    Guid ClienteId,
+    Guid VehiculoId,
     string Descripcion,
     string? Observaciones,
     List<CreateMiniOrdenDetalleDto> Detalles,
@@ -78,6 +91,8 @@ public record AprobarRechazarMiniOrdenDto(
 );
 
 public record MiniOrdenFiltroDto(
+    Guid? ClienteId,
+    Guid? VehiculoId,
     Guid? OrdenServicioId,
     EstadoMiniOrden? Estado,
     Guid? MecanicoId,

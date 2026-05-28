@@ -5,8 +5,16 @@ namespace Domain.Entities;
 public class MiniOrden : BaseEntity
 {
     public string NumeroMiniOrden { get; set; } = string.Empty;
-    public Guid OrdenServicioId { get; set; }
-    public OrdenServicio OrdenServicio { get; set; } = null!;
+
+    // Cliente y vehículo — requeridos desde la creación del presupuesto
+    public Guid ClienteId { get; set; }
+    public Cliente Cliente { get; set; } = null!;
+    public Guid VehiculoId { get; set; }
+    public Vehiculo Vehiculo { get; set; } = null!;
+
+    // Se llena automáticamente cuando el cliente aprueba el presupuesto
+    public Guid? OrdenServicioId { get; set; }
+    public OrdenServicio? OrdenServicio { get; set; }
     public Guid? OrdenAreaId { get; set; }
     public OrdenArea? OrdenArea { get; set; }
     public string Descripcion { get; set; } = string.Empty;

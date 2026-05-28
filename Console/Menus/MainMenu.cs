@@ -73,9 +73,9 @@ public class MainMenu : BaseMenu
         if (User.EsAdmin() || User.EsJefeTaller() || User.EsRecepcionista() || User.EsMecanico())
             lista.Add("  [cyan]🔧[/] Órdenes de Servicio");
 
-        // Mini-Órdenes — Mecánico, JefeTaller, Cliente (solo aprobación), Admin
+        // Presupuestos — Mecánico (crear), JefeTaller (aprobar), Cliente (aprobar), Admin
         if (User.PuedeGestionarMiniOrdenes())
-            lista.Add("  [cyan]📋[/] Mini-Órdenes");
+            lista.Add("  [cyan]📋[/] Presupuestos");
 
         // Inventario — Admin, JefeTaller, Almacén
         if (User.PuedeVerInventario())
@@ -103,7 +103,7 @@ public class MainMenu : BaseMenu
             await new VehiculosMenu(Api, User).ShowAsync();
         else if (opcion.Contains("Órdenes de Servicio"))
             await new OrdenesMenu(Api, User).ShowAsync();
-        else if (opcion.Contains("Mini-Órdenes"))
+        else if (opcion.Contains("Presupuestos"))
             await new MiniOrdenesMenu(Api, User).ShowAsync();
         else if (opcion.Contains("Inventario"))
             await new InventarioMenu(Api, User).ShowAsync();

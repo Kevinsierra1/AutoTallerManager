@@ -279,8 +279,16 @@ public class ApiService
     public Task<MiniOrdenModel?> GetMiniOrdenByIdAsync(Guid id) =>
         GetAsync<MiniOrdenModel>($"/api/MiniOrdenes/{id}");
 
-    public Task<MiniOrdenModel?> CreateMiniOrdenAsync(object dto) =>
-        PostAndGetAsync<MiniOrdenModel>("/api/MiniOrdenes", dto);
+    public Task<MiniOrdenModel?> CreatePresupuestoAsync(Guid clienteId, Guid vehiculoId, string descripcion, string? observaciones, List<object>? detalles) =>
+        PostAndGetAsync<MiniOrdenModel>("/api/MiniOrdenes", new
+        {
+            ClienteId = clienteId,
+            VehiculoId = vehiculoId,
+            Descripcion = descripcion,
+            Observaciones = observaciones,
+            Detalles = detalles ?? new List<object>(),
+            ManosObra = (object?)null
+        });
 
     public Task<MiniOrdenModel?> EnviarRevisionJefeAsync(Guid id) =>
         PostAndGetAsync<MiniOrdenModel>($"/api/MiniOrdenes/{id}/enviar-revision", new { });

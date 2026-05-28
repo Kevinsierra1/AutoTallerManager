@@ -43,11 +43,11 @@ public class MiniOrdenesController : ControllerBase
         return Ok(ApiResponse<MiniOrdenDto>.Success(result));
     }
 
-    /// <summary>Crea una nueva mini-orden (solo Mecánicos)</summary>
+    /// <summary>Crea un nuevo presupuesto — Cliente + Vehículo (solo Mecánicos)</summary>
     [HttpPost]
     [Authorize(Policy = "MecanicoOnly")]
     [ProducesResponseType(typeof(ApiResponse<MiniOrdenDto>), 201)]
-    public async Task<IActionResult> Create([FromBody] CreateMiniOrdenDto dto, CancellationToken ct)
+    public async Task<IActionResult> Create([FromBody] CreatePresupuestoDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateMiniOrdenCommand(dto, CurrentUserId), ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<MiniOrdenDto>.Success(result));
