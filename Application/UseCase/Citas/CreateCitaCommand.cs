@@ -1,5 +1,6 @@
 using MediatR;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Domain.Entities;
 using Domain.Enums;
@@ -27,6 +28,11 @@ public class CreateCitaCommandHandler : IRequestHandler<CreateCitaCommand, CitaD
         cita.Estado = EstadoCitaEnum.Pendiente;
         _context.Citas.Add(cita);
         await _context.SaveChangesAsync(cancellationToken);
-        return _mapper.Map<CitaDto>(cita);
+
+        var guardada = await _context.Citas
+            .Include(c => c.Cliente)
+            .Include(c => c.Vehiculo)
+            .FirstAsync(c => c.Id == cita.Id, cancellationToken);
+        return _mapper.Map<CitaDto>(guardada);
     }
 }

@@ -14,6 +14,8 @@ public class Cliente : BaseEntity
     public string? Telefono { get; set; }
     public string? Direccion { get; set; }
     public bool Activo { get; set; } = true;
+    public Guid? UsuarioId { get; set; }
+    public Usuario? Usuario { get; set; }
     public ICollection<VehiculoPropietario>? VehiculoPropietarios { get; set; }
     public ICollection<OrdenServicio>? Ordenes { get; set; }
     public ICollection<Factura>? Facturas { get; set; }

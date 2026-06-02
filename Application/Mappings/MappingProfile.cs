@@ -22,7 +22,9 @@ public class MappingProfile : Profile
             .ForCtorParam("TipoDocumento", o => o.MapFrom(s => s.TipoDocumento != null ? s.TipoDocumento.Nombre : string.Empty));
         CreateMap<CreateClienteDto, Cliente>()
             .ForMember(d => d.TipoDocumentoId, o => o.Ignore())
-            .ForMember(d => d.TipoDocumento,   o => o.Ignore());
+            .ForMember(d => d.TipoDocumento,   o => o.Ignore())
+            .ForMember(d => d.UsuarioId,        o => o.Ignore())
+            .ForMember(d => d.Usuario,          o => o.Ignore());
         CreateMap<UpdateClienteDto, Cliente>()
             .ForAllMembers(o => o.Condition((src, dest, val) => val != null));
 
@@ -45,8 +47,12 @@ public class MappingProfile : Profile
         CreateMap<OrdenServicio, OrdenServicioDto>()
             .ForCtorParam("ClienteNombre", o => o.MapFrom(s => s.Cliente != null ? $"{s.Cliente.Nombres} {s.Cliente.Apellidos}" : null))
             .ForCtorParam("VehiculoPlaca", o => o.MapFrom(s => s.Vehiculo != null ? s.Vehiculo.Placa : null))
-            .ForCtorParam("MecanicoNombre", o => o.MapFrom(s => s.Mecanico != null ? $"{s.Mecanico.Nombres} {s.Mecanico.Apellidos}" : null));
-        CreateMap<CreateOrdenDto, OrdenServicio>();
+            .ForCtorParam("MecanicoNombre", o => o.MapFrom(s => s.Mecanico != null ? $"{s.Mecanico.Nombres} {s.Mecanico.Apellidos}" : null))
+            .ForCtorParam("Detalles", o => o.MapFrom(s => (List<DetalleOrdenDto>?)null))
+            .ForCtorParam("ManosObra", o => o.MapFrom(s => (List<ManoObraOrdenDto>?)null));
+        CreateMap<CreateOrdenDto, OrdenServicio>()
+            .ForMember(d => d.ManosObra,            o => o.Ignore())
+            .ForMember(d => d.DetallesOrdenServicio, o => o.Ignore());
 
         // Repuestos
         CreateMap<Repuesto, RepuestoDto>()

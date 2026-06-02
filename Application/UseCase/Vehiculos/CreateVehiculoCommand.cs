@@ -1,5 +1,6 @@
 using MediatR;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Domain.Entities;
 
@@ -26,6 +27,11 @@ public class CreateVehiculoCommandHandler : IRequestHandler<CreateVehiculoComman
         vehiculo.Activo = true;
         _context.Vehiculos.Add(vehiculo);
         await _context.SaveChangesAsync(cancellationToken);
-        return _mapper.Map<VehiculoDto>(vehiculo);
+
+        var guardado = await _context.Vehiculos
+            .Include(v => v.ModeloVehiculo).ThenInclude(m => m.Marca)
+            .Include(v => v.Color)
+            .FirstAsync(v => v.Id == vehiculo.Id, cancellationToken);
+        return _mapper.Map<VehiculoDto>(guardado);
     }
 }

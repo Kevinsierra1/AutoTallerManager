@@ -1,7 +1,6 @@
 using MediatR;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Application.Extensions;
 using Application.Common;
@@ -23,10 +22,7 @@ public class GetOrdenesQueryHandler : IRequestHandler<GetOrdenesQuery, PagedResu
 
     public async Task<PagedResult<OrdenServicioDto>> Handle(GetOrdenesQuery request, CancellationToken cancellationToken)
     {
-        var q = _context.OrdenesServicio
-            .Include(o => o.Cliente)
-            .Include(o => o.Vehiculo)
-            .AsQueryable();
+        var q = _context.OrdenesServicio.AsQueryable();
         var f = request.Filtro;
         if (f.ClienteId.HasValue) q = q.Where(o => o.ClienteId == f.ClienteId);
         if (f.VehiculoId.HasValue) q = q.Where(o => o.VehiculoId == f.VehiculoId);

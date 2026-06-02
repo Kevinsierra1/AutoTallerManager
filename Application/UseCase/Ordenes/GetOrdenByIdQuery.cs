@@ -25,8 +25,33 @@ public class GetOrdenByIdQueryHandler : IRequestHandler<GetOrdenByIdQuery, Orden
             .Include(o => o.Cliente)
             .Include(o => o.Vehiculo)
             .Include(o => o.Mecanico)
+            .Include(o => o.DetallesOrdenServicio!)
+                .ThenInclude(d => d.Repuesto)
+            .Include(o => o.ManosObra!)
+                .ThenInclude(m => m.Empleado)
             .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken)
             ?? throw new NotFoundException("OrdenServicio", request.Id);
-        return _mapper.Map<OrdenServicioDto>(orden);
+
+        var dto = _mapper.Map<OrdenServicioDto>(orden);
+
+        return dto with
+        {
+            Detalles = orden.DetallesOrdenServicio?.Select(d => new DetalleOrdenDto(
+                d.Id,
+                d.RepuestoId,
+                d.Repuesto?.Nombre,
+                d.Cantidad,
+                d.PrecioUnitario,
+                d.Subtotal
+            )).ToList(),
+            ManosObra = orden.ManosObra?.Select(m => new ManoObraOrdenDto(
+                m.Id,
+                m.Descripcion,
+                m.Costo,
+                m.HorasTrabajadas,
+                m.EmpleadoId,
+                m.Empleado != null ? $"{m.Empleado.Nombres} {m.Empleado.Apellidos}" : null
+            )).ToList()
+        };
     }
 }

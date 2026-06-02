@@ -1,5 +1,6 @@
 using MediatR;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Application.Common.Exceptions;
 
@@ -20,7 +21,9 @@ public class UpdateClienteCommandHandler : IRequestHandler<UpdateClienteCommand,
 
     public async Task<ClienteDto> Handle(UpdateClienteCommand request, CancellationToken cancellationToken)
     {
-        var cliente = await _context.Clientes.FindAsync([request.Id], cancellationToken)
+        var cliente = await _context.Clientes
+            .Include(c => c.TipoDocumento)
+            .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken)
             ?? throw new NotFoundException("Cliente", request.Id);
         _mapper.Map(request.Dto, cliente);
         await _context.SaveChangesAsync(cancellationToken);

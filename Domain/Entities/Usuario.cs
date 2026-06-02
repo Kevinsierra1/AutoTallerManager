@@ -12,4 +12,5 @@ public class Usuario : BaseEntity
     public ICollection<SesionUsuario>? Sesiones { get; set; }
     public ICollection<HistorialAcceso>? HistorialAccesos { get; set; }
     public ICollection<Notificacion>? Notificaciones { get; set; }
+    public Cliente? Cliente { get; set; }
 }

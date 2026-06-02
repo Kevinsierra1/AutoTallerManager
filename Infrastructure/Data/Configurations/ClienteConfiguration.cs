@@ -23,5 +23,10 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         builder.Property(c => c.Email).HasMaxLength(256);
         builder.Property(c => c.Telefono).HasMaxLength(20);
         builder.HasOne(c => c.TipoDocumento).WithMany().HasForeignKey(c => c.TipoDocumentoId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(c => c.Usuario)
+               .WithOne(u => u.Cliente)
+               .HasForeignKey<Cliente>(c => c.UsuarioId)
+               .OnDelete(DeleteBehavior.SetNull)
+               .IsRequired(false);
     }
 }

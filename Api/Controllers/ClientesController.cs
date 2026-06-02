@@ -25,14 +25,14 @@ public class ClientesController : ControllerBase
         return Ok(ApiResponse<PagedResult<ClienteDto>>.Success(result));
     }
 
-    /// <summary>Obtiene un cliente por ID (GUID)</summary>
+    /// <summary>Obtiene el perfil completo de un cliente (órdenes y pre-órdenes pendientes)</summary>
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<ClienteDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<ClientePerfilDto>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetClienteByIdQuery(id), ct);
-        return Ok(ApiResponse<ClienteDto>.Success(result));
+        return Ok(ApiResponse<ClientePerfilDto>.Success(result));
     }
 
     /// <summary>Obtiene un cliente por número secuencial (#1, #2, #3…)</summary>
@@ -45,14 +45,14 @@ public class ClientesController : ControllerBase
         return Ok(ApiResponse<ClienteDto>.Success(result));
     }
 
-    /// <summary>Crea un nuevo cliente</summary>
+    /// <summary>Crea un nuevo cliente y genera su cuenta de acceso con contraseña temporal</summary>
     [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<ClienteDto>), 201)]
+    [ProducesResponseType(typeof(ApiResponse<ClienteCreadoDto>), 201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create([FromBody] CreateClienteDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateClienteCommand(dto), ct);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<ClienteDto>.Success(result));
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<ClienteCreadoDto>.Success(result));
     }
 
     /// <summary>Actualiza un cliente</summary>

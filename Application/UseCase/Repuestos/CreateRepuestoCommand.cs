@@ -1,5 +1,6 @@
 using MediatR;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Domain.Entities;
 
@@ -26,6 +27,10 @@ public class CreateRepuestoCommandHandler : IRequestHandler<CreateRepuestoComman
         repuesto.Activo = true;
         _context.Repuestos.Add(repuesto);
         await _context.SaveChangesAsync(cancellationToken);
-        return _mapper.Map<RepuestoDto>(repuesto);
+
+        var guardado = await _context.Repuestos
+            .Include(r => r.CategoriaRepuesto)
+            .FirstAsync(r => r.Id == repuesto.Id, cancellationToken);
+        return _mapper.Map<RepuestoDto>(guardado);
     }
 }
