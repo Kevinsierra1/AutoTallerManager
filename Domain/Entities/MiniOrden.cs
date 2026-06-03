@@ -12,6 +12,10 @@ public class MiniOrden : BaseEntity
     public Guid VehiculoId { get; set; }
     public Vehiculo Vehiculo { get; set; } = null!;
 
+    // Tipo de servicio elegido al crear el presupuesto
+    public Guid? TipoServicioId { get; set; }
+    public TipoServicio? TipoServicio { get; set; }
+
     // Se llena automáticamente cuando el cliente aprueba el presupuesto
     public Guid? OrdenServicioId { get; set; }
     public OrdenServicio? OrdenServicio { get; set; }
@@ -32,6 +36,7 @@ public class MiniOrden : BaseEntity
     public decimal Total { get; set; }
     public string? Observaciones { get; set; }
     public string? MotivoRechazo { get; set; }
+    public bool Eliminado { get; set; } = false;
     public ICollection<MiniOrdenDetalle>? Detalles { get; set; }
     public ICollection<MiniOrdenManoObra>? ManosObra { get; set; }
     public ICollection<MiniOrdenHistorial>? Historial { get; set; }

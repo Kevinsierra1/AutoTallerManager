@@ -84,6 +84,16 @@ public class OrdenesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Elimina una orden (soft delete — solo si no tiene factura)</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "JefeTallerOnly")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await _mediator.Send(new DeleteOrdenCommand(id), ct);
+        return NoContent();
+    }
+
     /// <summary>Agrega un repuesto/insumo a la orden</summary>
     [HttpPost("{id:guid}/detalles")]
     [Authorize(Policy = "MecanicoOJefe")]

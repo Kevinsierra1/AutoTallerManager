@@ -18,20 +18,24 @@ public class AprobarRechazarJefeCommandHandler : IRequestHandler<AprobarRechazar
         var m = await _context.MiniOrdenes.FindAsync([request.MiniOrdenId], cancellationToken)
             ?? throw new NotFoundException("MiniOrden", request.MiniOrdenId);
 
-        if (m.Estado != EstadoMiniOrden.EnRevisionJefe)
-            throw new InvalidOperationException("La mini-orden no está pendiente de aprobación del Jefe de Taller.");
+        if (m.Estado != EstadoMiniOrden.EnRevisionJefe && m.Estado != EstadoMiniOrden.AprobadaJefe)
+            throw new InvalidOperationException("La mini-orden no está en revisión del Jefe de Taller.");
 
         var estadoAnterior = m.Estado;
-        m.Estado = request.Dto.Aprobado ? EstadoMiniOrden.AprobadaJefe : EstadoMiniOrden.RechazadaJefe;
+        // Determinar estado final: aprobado → directo a EnRevisionCliente; rechazado → RechazadaJefe
+        var estadoFinal = request.Dto.Aprobado
+            ? EstadoMiniOrden.EnRevisionCliente
+            : EstadoMiniOrden.RechazadaJefe;
+
         if (request.Dto.Aprobado)
         {
             m.FechaAprobacionJefe = DateTime.UtcNow;
-            // Solo asignar FK si el ID corresponde a un Empleado válido (mecánicos/jefes)
-            // Admin y otros roles sin Empleado dejan el campo null
             if (request.JefeId.HasValue)
                 m.JefeTallerId = request.JefeId;
         }
         else m.MotivoRechazo = request.Dto.Observacion;
+
+        m.Estado = estadoFinal;
         m.ActualizadoEn = DateTime.UtcNow;
 
         _context.MiniOrdenAprobaciones.Add(new MiniOrdenAprobacion
@@ -48,14 +52,11 @@ public class AprobarRechazarJefeCommandHandler : IRequestHandler<AprobarRechazar
         _context.MiniOrdenHistoriales.Add(new MiniOrdenHistorial
         {
             Id = Guid.NewGuid(), MiniOrdenId = m.Id,
-            EstadoAnterior = estadoAnterior, EstadoNuevo = m.Estado,
+            EstadoAnterior = estadoAnterior, EstadoNuevo = estadoFinal,
             Observacion = request.Dto.Observacion,
             NivelAprobacion = NivelAprobacionMJC.JefeTaller,
             Fecha = DateTime.UtcNow, CreadoEn = DateTime.UtcNow
         });
-
-        if (request.Dto.Aprobado)
-            m.Estado = EstadoMiniOrden.EnRevisionCliente;
 
         await _context.SaveChangesAsync(cancellationToken);
         return await new GetMiniOrdenByIdQueryHandler(_context).Handle(new GetMiniOrdenByIdQuery(m.Id), cancellationToken);

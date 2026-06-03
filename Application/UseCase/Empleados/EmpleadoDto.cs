@@ -31,5 +31,6 @@ public record UpdateEmpleadoDto(
     string? Telefono,
     string? Email,
     string? Especialidad,
+    Guid? TipoServicioId,
     bool? Activo
 );

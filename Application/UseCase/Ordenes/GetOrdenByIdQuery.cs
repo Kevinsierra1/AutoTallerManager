@@ -30,7 +30,7 @@ public class GetOrdenByIdQueryHandler : IRequestHandler<GetOrdenByIdQuery, Orden
                 .ThenInclude(d => d.Repuesto)
             .Include(o => o.ManosObra!)
                 .ThenInclude(m => m.Empleado)
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken)
+            .FirstOrDefaultAsync(o => o.Id == request.Id && !o.Eliminado, cancellationToken)
             ?? throw new NotFoundException("OrdenServicio", request.Id);
 
         var dto = _mapper.Map<OrdenServicioDto>(orden);

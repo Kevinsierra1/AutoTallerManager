@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260603182912_TipoServicioEnRepuesto2")]
+    partial class TipoServicioEnRepuesto2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -774,12 +777,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("TipoEmpleado")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("TipoServicioId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("TipoServicioId");
 
                     b.ToTable("Empleados");
                 });
@@ -1670,9 +1668,6 @@ namespace Infrastructure.Migrations
                     b.Property<Guid?>("OrdenServicioId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TipoServicioId")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal>("Total")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -1702,8 +1697,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("OrdenAreaId");
 
                     b.HasIndex("OrdenServicioId");
-
-                    b.HasIndex("TipoServicioId");
 
                     b.HasIndex("VehiculoId");
 
@@ -4144,15 +4137,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Cliente");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Empleado", b =>
-                {
-                    b.HasOne("Domain.Entities.TipoServicio", "TipoServicio")
-                        .WithMany()
-                        .HasForeignKey("TipoServicioId");
-
-                    b.Navigation("TipoServicio");
-                });
-
             modelBuilder.Entity("Domain.Entities.EntradaInventario", b =>
                 {
                     b.HasOne("Domain.Entities.MovimientoInventario", "MovimientoInventario")
@@ -4303,10 +4287,6 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("OrdenServicioId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Domain.Entities.TipoServicio", "TipoServicio")
-                        .WithMany()
-                        .HasForeignKey("TipoServicioId");
-
                     b.HasOne("Domain.Entities.Vehiculo", "Vehiculo")
                         .WithMany()
                         .HasForeignKey("VehiculoId")
@@ -4322,8 +4302,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("OrdenArea");
 
                     b.Navigation("OrdenServicio");
-
-                    b.Navigation("TipoServicio");
 
                     b.Navigation("Vehiculo");
                 });

@@ -23,6 +23,8 @@ public class AprobarRechazarClienteCommandHandler : IRequestHandler<AprobarRecha
         var m = await _context.MiniOrdenes
             .Include(x => x.Cliente)
             .Include(x => x.Vehiculo)
+            .Include(x => x.Detalles!).ThenInclude(d => d.Repuesto)
+            .Include(x => x.ManosObra!)
             .FirstOrDefaultAsync(x => x.Id == request.MiniOrdenId, cancellationToken)
             ?? throw new NotFoundException("Presupuesto", request.MiniOrdenId);
 
@@ -67,15 +69,16 @@ public class AprobarRechazarClienteCommandHandler : IRequestHandler<AprobarRecha
                 var contador = await _context.OrdenesServicio.CountAsync(cancellationToken);
                 var nuevaOrden = new OrdenServicio
                 {
-                    Id          = Guid.NewGuid(),
-                    NumeroOrden = $"OS-{DateTime.UtcNow:yyyyMMdd}-{contador + 1:D4}",
-                    ClienteId   = m.ClienteId,
-                    VehiculoId  = m.VehiculoId,
-                    MecanicoId  = m.MecanicoId,
-                    Estado      = EstadoOrdenEnum.Aprobada,
-                    Descripcion = m.Descripcion,
+                    Id           = Guid.NewGuid(),
+                    NumeroOrden  = $"OS-{DateTime.UtcNow:yyyyMMdd}-{contador + 1:D4}",
+                    ClienteId    = m.ClienteId,
+                    VehiculoId   = m.VehiculoId,
+                    MecanicoId   = m.MecanicoId,
+                    TipoServicioId = m.TipoServicioId,
+                    Estado       = EstadoOrdenEnum.Aprobada,
+                    Descripcion  = m.Descripcion,
                     FechaIngreso = DateTime.UtcNow,
-                    CreadoEn    = DateTime.UtcNow
+                    CreadoEn     = DateTime.UtcNow
                 };
                 _context.OrdenesServicio.Add(nuevaOrden);
                 ordenId = nuevaOrden.Id;
@@ -91,14 +94,79 @@ public class AprobarRechazarClienteCommandHandler : IRequestHandler<AprobarRecha
                 });
             }
 
+            // ── Copiar repuestos del presupuesto a la OS ──────────────────────
+            decimal totalDetalles = 0;
+            foreach (var det in m.Detalles ?? [])
+            {
+                var subtotal = det.Cantidad * det.PrecioUnitario;
+                _context.DetallesOrdenServicio.Add(new DetalleOrdenServicio
+                {
+                    Id              = Guid.NewGuid(),
+                    OrdenServicioId = ordenId,
+                    RepuestoId      = det.RepuestoId,
+                    Cantidad        = det.Cantidad,
+                    PrecioUnitario  = det.PrecioUnitario,
+                    CreadoEn        = DateTime.UtcNow
+                });
+                totalDetalles += subtotal;
+            }
+
+            // ── Copiar mano de obra del presupuesto a la OS ───────────────────
+            decimal totalMO = 0;
+            foreach (var mo in m.ManosObra ?? [])
+            {
+                _context.ManosObra.Add(new ManoObra
+                {
+                    Id              = Guid.NewGuid(),
+                    OrdenServicioId = ordenId,
+                    Descripcion     = mo.Descripcion,
+                    HorasTrabajadas = mo.HorasTrabajo,
+                    Costo           = mo.Total,
+                    EmpleadoId      = mo.TecnicoId,
+                    CreadoEn        = DateTime.UtcNow
+                });
+                totalMO += mo.Total;
+            }
+
+            // Actualizar total de la OS si hay importes
+            if (totalDetalles > 0 || totalMO > 0)
+            {
+                var osTotal = await _context.OrdenesServicio
+                    .FirstOrDefaultAsync(os => os.Id == ordenId, cancellationToken);
+                if (osTotal != null)
+                    osTotal.Total = (osTotal.Total ?? 0) + totalDetalles + totalMO;
+            }
+
             m.OrdenServicioId = ordenId;
-            m.Estado     = EstadoMiniOrden.EnProceso;
+            m.Estado      = EstadoMiniOrden.EnProceso;
             m.FechaInicio = DateTime.UtcNow;
         }
         else
         {
             m.Estado = EstadoMiniOrden.RechazadaCliente;
             m.MotivoRechazo = request.Dto.Observacion;
+
+            // Si la OS vinculada existe, verificar si ya no quedan mini-ordenes activas para ella
+            // → Si todas están rechazadas/canceladas, marcar la OS como eliminada (no tiene trabajo real)
+            if (m.OrdenServicioId.HasValue)
+            {
+                var miniActivas = await _context.MiniOrdenes.AnyAsync(
+                    mo => mo.OrdenServicioId == m.OrdenServicioId
+                       && mo.Id != m.Id
+                       && (int)mo.Estado < 7, // 0-6 = activo (no Rechazado ni Cancelado)
+                    cancellationToken);
+
+                if (!miniActivas)
+                {
+                    var os = await _context.OrdenesServicio
+                        .FirstOrDefaultAsync(o => o.Id == m.OrdenServicioId.Value, cancellationToken);
+                    if (os != null && os.Estado != Domain.Enums.EstadoOrdenEnum.Finalizada)
+                    {
+                        os.Eliminado = true;
+                        os.ActualizadoEn = DateTime.UtcNow;
+                    }
+                }
+            }
         }
 
         m.ActualizadoEn = DateTime.UtcNow;

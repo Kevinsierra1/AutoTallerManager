@@ -8,7 +8,7 @@ using Domain.Enums;
 
 namespace Application.UseCase.Empleados;
 
-public record GetEmpleadosQuery(TipoEmpleadoEnum? Tipo, int PageNumber = 1, int PageSize = 10) : IRequest<PagedResult<EmpleadoDto>>;
+public record GetEmpleadosQuery(TipoEmpleadoEnum? Tipo, Guid? TipoServicioId = null, int PageNumber = 1, int PageSize = 10) : IRequest<PagedResult<EmpleadoDto>>;
 
 public class GetEmpleadosQueryHandler : IRequestHandler<GetEmpleadosQuery, PagedResult<EmpleadoDto>>
 {
@@ -25,6 +25,9 @@ public class GetEmpleadosQueryHandler : IRequestHandler<GetEmpleadosQuery, Paged
     {
         var q = _context.Empleados.AsQueryable();
         if (request.Tipo.HasValue) q = q.Where(x => x.TipoEmpleado == request.Tipo);
-        return await q.ProjectTo<EmpleadoDto>(_mapper.ConfigurationProvider).ToPagedResultAsync(request.PageNumber, request.PageSize, cancellationToken);
+        // Filtrar por tipo de servicio: incluye mecánicos especializados en ese tipo + mecánicos sin especialidad asignada
+        if (request.TipoServicioId.HasValue)
+            q = q.Where(x => x.TipoServicioId == request.TipoServicioId || x.TipoServicioId == null);
+        return await q.Where(x => x.Activo).ProjectTo<EmpleadoDto>(_mapper.ConfigurationProvider).ToPagedResultAsync(request.PageNumber, request.PageSize, cancellationToken);
     }
 }

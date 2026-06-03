@@ -7,6 +7,8 @@ public class Repuesto : BaseEntity
     public string? Descripcion { get; set; }
     public Guid CategoriaRepuestoId { get; set; }
     public CategoriaRepuesto CategoriaRepuesto { get; set; } = null!;
+    public Guid? TipoServicioId { get; set; }
+    public TipoServicio? TipoServicio { get; set; }
     public decimal PrecioCompra { get; set; }
     public decimal PrecioVenta { get; set; }
     public int StockActual { get; set; }

@@ -11,6 +11,8 @@ public class Empleado : BaseEntity
     public string? Email { get; set; }
     public TipoEmpleadoEnum TipoEmpleado { get; set; }
     public string? Especialidad { get; set; }
+    public Guid? TipoServicioId { get; set; }
+    public TipoServicio? TipoServicio { get; set; }
     public bool Activo { get; set; } = true;
     public ICollection<OrdenServicio>? OrdenesAsignadas { get; set; }
 }

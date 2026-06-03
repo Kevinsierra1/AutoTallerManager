@@ -68,6 +68,7 @@ public record CreatePresupuestoDto(
     Guid VehiculoId,
     string Descripcion,
     string? Observaciones,
+    Guid? TipoServicioId,
     List<CreateMiniOrdenDetalleDto> Detalles,
     List<CreateMiniOrdenManoObraDto>? ManosObra
 );

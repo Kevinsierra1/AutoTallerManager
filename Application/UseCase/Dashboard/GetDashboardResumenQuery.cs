@@ -18,9 +18,9 @@ public class GetDashboardResumenQueryHandler : IRequestHandler<GetDashboardResum
 
         var totalClientes = await _context.Clientes.CountAsync(cancellationToken);
         var totalVehiculos = await _context.Vehiculos.CountAsync(cancellationToken);
-        var ordenesActivas = await _context.OrdenesServicio.CountAsync(o =>
-            o.Estado == EstadoOrdenEnum.Pendiente || o.Estado == EstadoOrdenEnum.EnProceso || o.Estado == EstadoOrdenEnum.Aprobada, cancellationToken);
-        var ordenesFinalizadas = await _context.OrdenesServicio.CountAsync(o => o.Estado == EstadoOrdenEnum.Finalizada, cancellationToken);
+        var ordenesActivas = await _context.OrdenesServicio.CountAsync(o => !o.Eliminado &&
+            (o.Estado == EstadoOrdenEnum.Pendiente || o.Estado == EstadoOrdenEnum.EnProceso || o.Estado == EstadoOrdenEnum.Aprobada), cancellationToken);
+        var ordenesFinalizadas = await _context.OrdenesServicio.CountAsync(o => !o.Eliminado && o.Estado == EstadoOrdenEnum.Finalizada, cancellationToken);
         var repuestosCriticos = await _context.Repuestos.CountAsync(r => r.StockActual <= r.StockMinimo, cancellationToken);
         var facturacionMensual = await _context.Facturas.Where(f => f.FechaEmision >= inicio).SumAsync(f => f.Total, cancellationToken);
 

@@ -15,5 +15,6 @@ public class RepuestoConfiguration : IEntityTypeConfiguration<Repuesto>
         builder.Property(r => r.PrecioCompra).HasPrecision(18, 2);
         builder.Property(r => r.PrecioVenta).HasPrecision(18, 2);
         builder.HasOne(r => r.CategoriaRepuesto).WithMany(c => c.Repuestos).HasForeignKey(r => r.CategoriaRepuestoId);
+        builder.HasOne(r => r.TipoServicio).WithMany().HasForeignKey(r => r.TipoServicioId).IsRequired(false);
     }
 }

@@ -23,7 +23,10 @@ public class GetRepuestosQueryHandler : IRequestHandler<GetRepuestosQuery, Paged
 
     public async Task<PagedResult<RepuestoDto>> Handle(GetRepuestosQuery request, CancellationToken cancellationToken)
     {
-        var q = _context.Repuestos.AsQueryable();
+        var q = _context.Repuestos
+            .Include(r => r.CategoriaRepuesto)
+            .Include(r => r.TipoServicio)
+            .AsQueryable();
         var f = request.Filtro;
         if (!string.IsNullOrWhiteSpace(f.Busqueda))
         {
@@ -32,9 +35,10 @@ public class GetRepuestosQueryHandler : IRequestHandler<GetRepuestosQuery, Paged
                            || EF.Functions.ILike(x.Codigo, patron)
                            || (x.Descripcion != null && EF.Functions.ILike(x.Descripcion, patron)));
         }
-        if (f.CategoriaId.HasValue) q = q.Where(x => x.CategoriaRepuestoId == f.CategoriaId);
-        if (f.StockCritico == true) q = q.Where(x => x.StockActual <= x.StockMinimo);
-        if (f.Activo.HasValue) q = q.Where(x => x.Activo == f.Activo);
+        if (f.CategoriaId.HasValue)    q = q.Where(x => x.CategoriaRepuestoId == f.CategoriaId);
+        if (f.TipoServicioId.HasValue) q = q.Where(x => x.TipoServicioId == f.TipoServicioId);
+        if (f.StockCritico == true)    q = q.Where(x => x.StockActual <= x.StockMinimo);
+        if (f.Activo.HasValue)         q = q.Where(x => x.Activo == f.Activo);
         return await q.ProjectTo<RepuestoDto>(_mapper.ConfigurationProvider).ToPagedResultAsync(f.PageNumber, f.PageSize, cancellationToken);
     }
 }

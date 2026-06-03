@@ -22,7 +22,7 @@ public class GetOrdenesQueryHandler : IRequestHandler<GetOrdenesQuery, PagedResu
 
     public async Task<PagedResult<OrdenServicioDto>> Handle(GetOrdenesQuery request, CancellationToken cancellationToken)
     {
-        var q = _context.OrdenesServicio.AsQueryable();
+        var q = _context.OrdenesServicio.Where(o => !o.Eliminado).AsQueryable();
         var f = request.Filtro;
         if (f.ClienteId.HasValue) q = q.Where(o => o.ClienteId == f.ClienteId);
         if (f.VehiculoId.HasValue) q = q.Where(o => o.VehiculoId == f.VehiculoId);

@@ -32,14 +32,16 @@ public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenComm
         if (!perteneceAlCliente)
             throw new Domain.Exceptions.DomainException("El vehículo no está registrado a nombre del cliente seleccionado.");
 
-        var contador = await _context.MiniOrdenes.CountAsync(cancellationToken);
+        // Usar un sufijo único para evitar colisiones (incluso con soft-deletes)
+        var numeroMiniOrden = $"PRES-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
         var presupuesto = new MiniOrden
         {
             Id = Guid.NewGuid(),
-            NumeroMiniOrden = $"PRES-{DateTime.UtcNow:yyyyMMdd}-{contador + 1:D4}",
+            NumeroMiniOrden = numeroMiniOrden,
             ClienteId = dto.ClienteId,
             VehiculoId = dto.VehiculoId,
             OrdenServicioId = null,   // se asigna cuando el cliente apruebe
+            TipoServicioId = dto.TipoServicioId,
             Descripcion = dto.Descripcion,
             Estado = EstadoMiniOrden.Borrador,
             MecanicoId = request.MecanicoId,

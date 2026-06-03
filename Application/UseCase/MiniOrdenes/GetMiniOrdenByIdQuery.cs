@@ -23,7 +23,7 @@ public class GetMiniOrdenByIdQueryHandler : IRequestHandler<GetMiniOrdenByIdQuer
             .Include(x => x.JefeTaller)
             .Include(x => x.Detalles!).ThenInclude(d => d.Repuesto)
             .Include(x => x.ManosObra!).ThenInclude(mo => mo.Tecnico)
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken)
+            .FirstOrDefaultAsync(x => x.Id == request.Id && !x.Eliminado, cancellationToken)
             ?? throw new NotFoundException("Presupuesto", request.Id);
 
         return MapToDto(m);

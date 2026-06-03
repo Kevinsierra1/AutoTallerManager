@@ -122,6 +122,16 @@ public class MiniOrdenesController : ControllerBase
         return Ok(ApiResponse<MiniOrdenDto>.Success(result));
     }
 
+    /// <summary>Elimina un presupuesto (soft delete)</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "MecanicoOJefe")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await _mediator.Send(new DeleteMiniOrdenCommand(id), ct);
+        return NoContent();
+    }
+
     /// <summary>Agrega un repuesto al presupuesto</summary>
     [HttpPost("{id:guid}/detalles")]
     [Authorize(Policy = "MecanicoOnly")]

@@ -18,6 +18,7 @@ public class GetDashboardOrdenesQueryHandler : IRequestHandler<GetDashboardOrden
     {
         // Enum.ToString() no es traducible a SQL — traer a memoria y convertir
         var raw = await _context.OrdenesServicio
+            .Where(o => !o.Eliminado)
             .GroupBy(o => o.Estado)
             .Select(g => new { Estado = (int)g.Key, Cantidad = g.Count() })
             .ToListAsync(cancellationToken);

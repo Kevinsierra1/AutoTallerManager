@@ -20,6 +20,7 @@ public class OrdenServicio : BaseEntity
     public DateTime FechaIngreso { get; set; } = DateTime.UtcNow;
     public DateTime? FechaFin { get; set; }
     public decimal? Total { get; set; }
+    public bool Eliminado { get; set; } = false;
     public ICollection<DetalleOrdenServicio>? DetallesOrdenServicio { get; set; }
     public ICollection<ManoObra>? ManosObra { get; set; }
     public ICollection<HistorialEstadoOrden>? HistorialEstados { get; set; }

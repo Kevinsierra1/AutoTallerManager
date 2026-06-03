@@ -17,12 +17,15 @@ public class GetMiniOrdenesQueryHandler : IRequestHandler<GetMiniOrdenesQuery, P
     {
         var f = request.Filtro;
         var q = _context.MiniOrdenes
+            .Where(m => !m.Eliminado)
             .Include(m => m.Cliente)
             .Include(m => m.Vehiculo).ThenInclude(v => v.ModeloVehiculo).ThenInclude(mv => mv.Marca)
             .Include(m => m.OrdenServicio)
             .Include(m => m.OrdenArea).ThenInclude(a => a!.AreaTaller)
             .Include(m => m.Mecanico)
             .Include(m => m.JefeTaller)
+            .Include(m => m.Detalles!).ThenInclude(d => d.Repuesto)
+            .Include(m => m.ManosObra!).ThenInclude(mo => mo.Tecnico)
             .AsQueryable();
 
         if (f.ClienteId.HasValue)       q = q.Where(m => m.ClienteId == f.ClienteId.Value);
@@ -46,7 +49,12 @@ public class GetMiniOrdenesQueryHandler : IRequestHandler<GetMiniOrdenesQuery, P
                 m.FechaInicio, m.FechaFin,
                 m.TotalMateriales, m.TotalManoObra, m.Total,
                 m.Observaciones, m.MotivoRechazo, m.CreadoEn,
-                null, null
+                m.Detalles == null ? null : m.Detalles.Select(d => new MiniOrdenDetalleDto(
+                    d.Id, d.RepuestoId, d.Repuesto.Nombre, d.Repuesto.Codigo,
+                    d.Cantidad, d.PrecioUnitario, d.Subtotal)).ToList(),
+                m.ManosObra == null ? null : m.ManosObra.Select(mo => new MiniOrdenManoObraDto(
+                    mo.Id, mo.Descripcion, mo.HorasTrabajo, mo.TarifaHora, mo.Total,
+                    mo.TecnicoId, mo.Tecnico != null ? $"{mo.Tecnico.Nombres} {mo.Tecnico.Apellidos}" : null)).ToList()
             ));
 
         return await projected.ToPagedResultAsync(f.PageNumber, f.PageSize, cancellationToken);

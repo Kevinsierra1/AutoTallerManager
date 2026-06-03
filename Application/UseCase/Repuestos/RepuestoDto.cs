@@ -7,6 +7,8 @@ public record RepuestoDto(
     string? Descripcion,
     Guid CategoriaRepuestoId,
     string? Categoria,
+    Guid? TipoServicioId,
+    string? TipoServicioNombre,
     decimal PrecioCompra,
     decimal PrecioVenta,
     int StockActual,
@@ -20,6 +22,7 @@ public record CreateRepuestoDto(
     string Nombre,
     string? Descripcion,
     Guid CategoriaRepuestoId,
+    Guid? TipoServicioId,
     decimal PrecioCompra,
     decimal PrecioVenta,
     int StockActual,
@@ -30,6 +33,7 @@ public record CreateRepuestoDto(
 public record UpdateRepuestoDto(
     string? Nombre,
     string? Descripcion,
+    Guid? TipoServicioId,
     decimal? PrecioCompra,
     decimal? PrecioVenta,
     int? StockMinimo,
@@ -40,6 +44,7 @@ public record UpdateRepuestoDto(
 public record RepuestoFiltroDto(
     string? Busqueda,
     Guid? CategoriaId,
+    Guid? TipoServicioId,
     bool? StockCritico,
     bool? Activo,
     int PageNumber = 1,

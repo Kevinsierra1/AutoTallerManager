@@ -25,6 +25,7 @@ public class UpdateEmpleadoCommandHandler : IRequestHandler<UpdateEmpleadoComman
         if (dto.Telefono != null) empleado.Telefono = dto.Telefono;
         if (dto.Email != null) empleado.Email = dto.Email;
         if (dto.Especialidad != null) empleado.Especialidad = dto.Especialidad;
+        if (dto.TipoServicioId.HasValue) empleado.TipoServicioId = dto.TipoServicioId;
         if (dto.Activo.HasValue) empleado.Activo = dto.Activo.Value;
         empleado.ActualizadoEn = DateTime.UtcNow;
 
