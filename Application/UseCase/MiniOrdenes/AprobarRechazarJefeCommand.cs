@@ -6,7 +6,7 @@ using Domain.Enums;
 
 namespace Application.UseCase.MiniOrdenes;
 
-public record AprobarRechazarJefeCommand(Guid MiniOrdenId, AprobarRechazarMiniOrdenDto Dto, Guid JefeId, string JefeNombre) : IRequest<MiniOrdenDto>;
+public record AprobarRechazarJefeCommand(Guid MiniOrdenId, AprobarRechazarMiniOrdenDto Dto, Guid? JefeId, string JefeNombre) : IRequest<MiniOrdenDto>;
 
 public class AprobarRechazarJefeCommandHandler : IRequestHandler<AprobarRechazarJefeCommand, MiniOrdenDto>
 {
@@ -23,7 +23,14 @@ public class AprobarRechazarJefeCommandHandler : IRequestHandler<AprobarRechazar
 
         var estadoAnterior = m.Estado;
         m.Estado = request.Dto.Aprobado ? EstadoMiniOrden.AprobadaJefe : EstadoMiniOrden.RechazadaJefe;
-        if (request.Dto.Aprobado) { m.FechaAprobacionJefe = DateTime.UtcNow; m.JefeTallerId = request.JefeId; }
+        if (request.Dto.Aprobado)
+        {
+            m.FechaAprobacionJefe = DateTime.UtcNow;
+            // Solo asignar FK si el ID corresponde a un Empleado válido (mecánicos/jefes)
+            // Admin y otros roles sin Empleado dejan el campo null
+            if (request.JefeId.HasValue)
+                m.JefeTallerId = request.JefeId;
+        }
         else m.MotivoRechazo = request.Dto.Observacion;
         m.ActualizadoEn = DateTime.UtcNow;
 

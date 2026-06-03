@@ -19,6 +19,7 @@ public class CatalogosController : ControllerBase
 
     /// <summary>Lista todas las marcas de vehículos</summary>
     [HttpGet("marcas")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetMarcas(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetMarcasQuery(), ct);
@@ -27,6 +28,7 @@ public class CatalogosController : ControllerBase
 
     /// <summary>Lista modelos de vehículos, opcionalmente filtrados por marca</summary>
     [HttpGet("modelos")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetModelos([FromQuery] Guid? marcaId, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetModelosQuery(marcaId), ct);
@@ -35,6 +37,7 @@ public class CatalogosController : ControllerBase
 
     /// <summary>Lista todos los colores disponibles</summary>
     [HttpGet("colores")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetColores(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetColoresQuery(), ct);

@@ -416,7 +416,7 @@ public class MiniOrdenesMenu : BaseMenu
         }
 
         var opciones = data.Items
-            .Select(m => $"{m.NumeroMiniOrden}  [{m.EstadoNombre}]  — {m.Descripcion[..Math.Min(45, m.Descripcion.Length)]}")
+            .Select(m => $"{Markup.Escape(m.NumeroMiniOrden)}  ({Markup.Escape(m.EstadoNombre ?? "-")})  — {Markup.Escape(m.Descripcion[..Math.Min(45, m.Descripcion.Length)])}")
             .ToList();
         opciones.Add("Cancelar");
 

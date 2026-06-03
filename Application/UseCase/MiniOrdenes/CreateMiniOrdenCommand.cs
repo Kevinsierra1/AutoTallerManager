@@ -7,7 +7,7 @@ using Domain.Enums;
 
 namespace Application.UseCase.MiniOrdenes;
 
-public record CreateMiniOrdenCommand(CreatePresupuestoDto Dto, Guid MecanicoId) : IRequest<MiniOrdenDto>;
+public record CreateMiniOrdenCommand(CreatePresupuestoDto Dto, Guid? MecanicoId) : IRequest<MiniOrdenDto>;
 
 public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenCommand, MiniOrdenDto>
 {

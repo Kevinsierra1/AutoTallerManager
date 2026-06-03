@@ -51,13 +51,15 @@ public class ApiService
         {
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
             var resp = await _http.PostAsync(url, content);
+            if (resp.StatusCode == System.Net.HttpStatusCode.NoContent) return (true, null);
             var body = await resp.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(body)) return (resp.IsSuccessStatusCode ? (true, null) : (false, "Error del servidor"));
             var result = JsonSerializer.Deserialize<ApiResult<object>>(body, _json);
             if (result?.Exito == true) return (true, null);
-            var err = result?.Mensaje ?? (result?.Errores?.FirstOrDefault()) ?? "Error desconocido";
+            var err = result?.Mensaje ?? result?.Errores?.FirstOrDefault() ?? "Error desconocido";
             return (false, err);
         }
-        catch (Exception ex) { return (false, ex.Message); }
+        catch { return (false, "Error de conexión"); }
     }
 
     private async Task<T?> PostAndGetAsync<T>(string url, object payload)
@@ -93,7 +95,7 @@ public class ApiService
             var resp = await _http.DeleteAsync(url);
             return resp.IsSuccessStatusCode ? (true, null) : (false, $"HTTP {(int)resp.StatusCode}");
         }
-        catch (Exception ex) { return (false, ex.Message); }
+        catch { return (false, "Error de conexión"); }
     }
 
     // ─── Auth ─────────────────────────────────────────────────────────────────
@@ -109,6 +111,20 @@ public class ApiService
             var result = JsonSerializer.Deserialize<ApiResult<AuthResponse>>(body, _json);
             if (result?.Exito == true && result.Data != null) return (result.Data, null);
             return (null, result?.Mensaje ?? "Credenciales inválidas");
+        }
+        catch (Exception ex) { return (null, $"Error de conexión: {ex.Message}"); }
+    }
+
+    public async Task<(AuthResponse? data, string? error)> RegisterClienteAsync(object dto)
+    {
+        try
+        {
+            var content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json");
+            var resp = await _http.PostAsync("/api/Auth/register-cliente", content);
+            var body = await resp.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<ApiResult<AuthResponse>>(body, _json);
+            if (result?.Exito == true && result.Data != null) return (result.Data, null);
+            return (null, result?.Mensaje ?? result?.Errores?.FirstOrDefault() ?? "Error al registrar");
         }
         catch (Exception ex) { return (null, $"Error de conexión: {ex.Message}"); }
     }
@@ -251,6 +267,18 @@ public class ApiService
 
     public Task<PagedData<EmpleadoModel>?> GetEmpleadosAsync(int page = 1, int size = 50) =>
         GetAsync<PagedData<EmpleadoModel>>($"/api/Empleados?PageNumber={page}&PageSize={size}");
+
+    public Task<PagedData<EmpleadoModel>?> GetEmpleadosByTipoAsync(int tipo, int size = 100) =>
+        GetAsync<PagedData<EmpleadoModel>>($"/api/Empleados?tipo={tipo}&PageNumber=1&PageSize={size}");
+
+    public Task<EmpleadoModel?> CreateEmpleadoAsync(object dto) =>
+        PostAndGetAsync<EmpleadoModel>("/api/Empleados", dto);
+
+    public Task<EmpleadoModel?> UpdateEmpleadoAsync(Guid id, object dto) =>
+        PutAndGetAsync<EmpleadoModel>($"/api/Empleados/{id}", dto);
+
+    public Task<(bool ok, string? error)> DeleteEmpleadoAsync(Guid id) =>
+        DeleteAsync($"/api/Empleados/{id}");
 
     // ─── Dashboard ────────────────────────────────────────────────────────────
 

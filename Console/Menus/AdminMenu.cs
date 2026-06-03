@@ -17,13 +17,15 @@ public class AdminMenu : BaseMenu
             var opcion = Choice("  Selecciona una opción:",
                 "  👤 Gestión de Usuarios",
                 "  🏷  Gestión de Roles",
+                "  🔧 Panel de Mecánicos",
                 "  🔒 Seguridad & Auditoría",
                 "  ← Volver al Menú Principal");
 
             if (opcion.Contains("Volver")) return;
 
-            if (opcion.Contains("Usuarios")) await GestionUsuariosAsync();
+            if (opcion.Contains("Usuarios"))  await GestionUsuariosAsync();
             else if (opcion.Contains("Roles")) await GestionRolesAsync();
+            else if (opcion.Contains("Mecánicos")) await PanelMecanicosAsync();
             else if (opcion.Contains("Seguridad")) await SeguridadAsync();
         }
     }
@@ -120,7 +122,7 @@ public class AdminMenu : BaseMenu
             return;
         }
 
-        var opcionesRol = roles.Select(r => $"{r.Nombre} — {r.Descripcion}").ToList();
+        var opcionesRol = roles.Select(r => $"{Markup.Escape(r.Nombre)} — {Markup.Escape(r.Descripcion ?? "")}").ToList();
         opcionesRol.Add("Sin rol (asignar después)");
 
         var rolSel = Choice("Selecciona el rol:", opcionesRol.ToArray());
@@ -177,16 +179,16 @@ public class AdminMenu : BaseMenu
             return;
         }
 
-        var opcionesUsuario = usuarios.Items.Select(u => $"{u.NombreCompleto} ({u.Email}) — [{u.RolesStr}]").ToList();
+        var opcionesUsuario = usuarios.Items.Select(u => $"{Markup.Escape(u.NombreCompleto)} ({Markup.Escape(u.Email)}) — {Markup.Escape(u.RolesStr)}").ToList();
         opcionesUsuario.Add("← Cancelar");
         var selUser = Choice("Selecciona el usuario:", opcionesUsuario.ToArray());
         if (selUser.Contains("Cancelar")) return;
 
         var usuario = usuarios.Items[opcionesUsuario.IndexOf(selUser)];
 
-        var opcionesRol = roles.Select(r => $"{r.Nombre} — {r.Descripcion}").ToList();
+        var opcionesRol = roles.Select(r => $"{Markup.Escape(r.Nombre)} — {Markup.Escape(r.Descripcion ?? "")}").ToList();
         opcionesRol.Add("← Cancelar");
-        var selRol = Choice($"Asignar rol a [{usuario.NombreCompleto}]:", opcionesRol.ToArray());
+        var selRol = Choice($"Asignar rol a {Markup.Escape(usuario.NombreCompleto)}:", opcionesRol.ToArray());
         if (selRol.Contains("Cancelar")) return;
 
         var rol = roles[opcionesRol.IndexOf(selRol)];
@@ -290,6 +292,70 @@ public class AdminMenu : BaseMenu
         Pause();
     }
 
+    // ── Panel de Mecánicos ────────────────────────────────────────────────────
+
+    private async Task PanelMecanicosAsync()
+    {
+        PrintHeader("Administración", "Panel de Mecánicos");
+
+        PagedData<EmpleadoModel>? datos = null;
+        await WithSpinner("Cargando mecánicos", async () =>
+        {
+            datos = await Api.GetEmpleadosAsync(size: 100);
+        });
+
+        if (datos == null || datos.Items.Count == 0)
+        {
+            NoData("No hay empleados registrados.");
+            Pause();
+            return;
+        }
+
+        // Solo mostrar tipos mecánicos: 0=Mecánico, 1=Eléctrico, 5=Diagnóstico, 6=Área
+        var grupos = new[]
+        {
+            (Tipos: new[] { 0 },    Icono: "🔧", Label: "Mecánicos Generales",      Color: "cyan"),
+            (Tipos: new[] { 1 },    Icono: "⚡", Label: "Técnicos Eléctricos",      Color: "yellow"),
+            (Tipos: new[] { 5 },    Icono: "🔍", Label: "Mecánicos de Diagnóstico", Color: "blue"),
+            (Tipos: new[] { 6 },    Icono: "🔩", Label: "Mecánicos de Área",        Color: "green"),
+        };
+
+        foreach (var g in grupos)
+        {
+            var lista = datos.Items.Where(e => g.Tipos.Contains(e.TipoEmpleado)).ToList();
+            if (lista.Count == 0) continue;
+
+            var tabla = new Table()
+                .Border(TableBorder.Rounded)
+                .BorderStyle(Style.Parse(g.Color))
+                .Expand();
+
+            tabla.AddColumn("[bold]Nombre[/]");
+            tabla.AddColumn("[bold]Especialidad[/]");
+            tabla.AddColumn(new TableColumn("[bold]Estado[/]").Centered());
+
+            foreach (var e in lista)
+            {
+                tabla.AddRow(
+                    $"[white]{Markup.Escape(e.NombreCompleto)}[/]",
+                    string.IsNullOrWhiteSpace(e.Especialidad)
+                        ? "[grey]Sin especificar[/]"
+                        : $"[{g.Color}]{Markup.Escape(e.Especialidad)}[/]",
+                    e.Activo ? "[green]✓ Activo[/]" : "[red]✗ Inactivo[/]"
+                );
+            }
+
+            AnsiConsole.Write(new Panel(tabla)
+                .Header($"[bold {g.Color}]  {g.Icono}  {g.Label}  ({lista.Count})[/]")
+                .Border(BoxBorder.Rounded)
+                .BorderStyle(Style.Parse(g.Color)));
+            AnsiConsole.WriteLine();
+        }
+
+        AnsiConsole.MarkupLine($"[grey]  Total mecánicos: {datos.Items.Count(e => e.TipoEmpleado is 0 or 1 or 5 or 6)}[/]");
+        Pause();
+    }
+
     // ── Seguridad & Auditoría ─────────────────────────────────────────────────
 
     private async Task SeguridadAsync()
@@ -303,7 +369,7 @@ public class AdminMenu : BaseMenu
             "  [white]GET /api/Seguridad/sesiones[/]\n" +
             "  [white]GET /api/Seguridad/logs-errores[/]\n\n" +
             "  Puedes consultarlos desde Swagger en:\n" +
-            "  [blue]http://localhost:5000/swagger[/]")
+            "  [white]http://localhost:5000/swagger[/][/]")
             .Header("[bold yellow]  Seguridad[/]")
             .Border(BoxBorder.Rounded)
             .BorderStyle(Style.Parse("yellow")));

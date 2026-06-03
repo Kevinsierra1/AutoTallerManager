@@ -93,9 +93,9 @@ public class ClientesMenu : BaseMenu
 
     private async Task CrearAsync()
     {
-        PrintHeader("Crear Cliente");
+        PrintHeader("Crear Cliente", "El cliente recibirá acceso para aprobar sus órdenes");
 
-        var nombres = AskRequired("Nombres:");
+        var nombres   = AskRequired("Nombres:");
         var apellidos = AskRequired("Apellidos:");
 
         var tipoDoc = AnsiConsole.Prompt(
@@ -105,31 +105,71 @@ public class ClientesMenu : BaseMenu
                 .AddChoices("CC", "CE", "PA", "NIT"));
 
         var numDoc = AskRequired("Número de Documento:");
-        var email  = Ask("Email (opcional):");
+        var email  = AskRequired("Email (para iniciar sesión):");
         var tel    = Ask("Teléfono (opcional):");
 
         AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[grey]  El cliente usará esta contraseña para aprobar sus órdenes de servicio.[/]");
+        var password = AnsiConsole.Prompt(
+            new TextPrompt<string>("[cyan]  Contraseña:[/]")
+                .Secret()
+                .Validate(p => p.Length >= 6
+                    ? ValidationResult.Success()
+                    : ValidationResult.Error("Mínimo 6 caracteres")));
 
-        if (!Confirm("¿Crear este cliente?")) return;
+        AnsiConsole.WriteLine();
+        if (!Confirm("¿Registrar cliente con acceso al sistema?")) return;
 
+        // Paso 1: crear perfil de cliente
         ClienteModel? created = null;
-        await WithSpinner("Creando cliente", async () =>
+        await WithSpinner("Creando perfil", async () =>
         {
             created = await Api.CreateClienteAsync(new
             {
                 Nombres = nombres, Apellidos = apellidos,
                 TipoDocumento = tipoDoc, NumeroDocumento = numDoc,
-                Email = string.IsNullOrEmpty(email) ? null : email,
+                Email = email,
                 Telefono = string.IsNullOrEmpty(tel) ? null : tel
             });
         });
 
-        if (created != null)
+        if (created == null)
         {
-            Ok($"Cliente [bold]{Markup.Escape(created.NombreCompleto)}[/] creado correctamente.");
-            AnsiConsole.MarkupLine($"[grey]  Número:[/] [bold cyan]#{created.Numero}[/]  [grey]  ID interno:[/] [dim]{created.Id}[/]");
+            Error("No se pudo crear el perfil del cliente. Verifica que el documento no esté registrado.");
+            Pause();
+            return;
         }
-        else Error("No se pudo crear el cliente.");
+
+        // Paso 2: crear usuario con rol Cliente
+        UsuarioModel? usuario = null;
+        await WithSpinner("Creando acceso al sistema", async () =>
+        {
+            var roles = await Api.GetRolesAsync();
+            var rolCliente = roles?.FirstOrDefault(r => r.Nombre == "Cliente");
+            usuario = await Api.CreateUsuarioAsync(new
+            {
+                Nombres    = nombres,
+                Apellidos  = apellidos,
+                Email      = email,
+                Password   = password,
+                RolIds     = rolCliente != null ? new[] { rolCliente.Id } : Array.Empty<Guid>()
+            });
+        });
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(new Panel(
+            $"[white]Cliente:[/]    [cyan]{Markup.Escape(created.NombreCompleto)}[/]  [grey](#{created.Numero})[/]\n" +
+            $"[white]Documento:[/]  [grey]{Markup.Escape(tipoDoc)} {Markup.Escape(numDoc)}[/]\n" +
+            $"[white]Email:[/]      [grey]{Markup.Escape(email)}[/]\n" +
+            (usuario != null
+                ? "[green]Acceso al sistema creado.[/] El cliente puede iniciar sesión para aprobar sus órdenes."
+                : "[yellow]Perfil creado, pero no se pudo crear el acceso.[/] Regístralo en Administración → Gestión de Usuarios."))
+            .Header(usuario != null
+                ? "[bold green]  ✓ Cliente Registrado[/]"
+                : "[bold yellow]  ⚠ Cliente Registrado (sin acceso)[/]")
+            .Border(BoxBorder.Rounded)
+            .BorderStyle(Style.Parse(usuario != null ? "green" : "yellow")));
+
         Pause();
     }
 

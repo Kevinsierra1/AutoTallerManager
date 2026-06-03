@@ -268,17 +268,26 @@ public class OrdenesMenu : BaseMenu
         if (orden == null) return;
 
         PagedData<EmpleadoModel>? empleados = null;
-        await WithSpinner("Cargando mecánicos", async () => { empleados = await Api.GetEmpleadosAsync(); });
+        await WithSpinner("Cargando mecánicos", async () => { empleados = await Api.GetEmpleadosAsync(size: 100); });
 
-        if (empleados == null || empleados.Items.Count == 0) { Error("No hay empleados registrados."); Pause(); return; }
+        if (empleados == null || empleados.Items.Count == 0) { Error("No hay mecánicos registrados."); Pause(); return; }
 
-        var opciones = empleados.Items.Select(e => $"{e.NombreCompleto}").ToList();
+        // Solo mostrar empleados de tipo mecánico (0=Mecánico, 1=Eléctrico, 5=Diagnóstico, 6=Área)
+        var mecanicos = empleados.Items
+            .Where(e => e.TipoEmpleado is 0 or 1 or 5 or 6 && e.Activo)
+            .ToList();
+
+        if (mecanicos.Count == 0) { Error("No hay mecánicos activos registrados."); Pause(); return; }
+
+        var opciones = mecanicos
+            .Select(e => $"{Markup.Escape(e.NombreCompleto)}  [[{TipoMecLabel(e.TipoEmpleado)}]]  —  {Markup.Escape(string.IsNullOrWhiteSpace(e.Especialidad) ? "Sin especialidad" : e.Especialidad)}")
+            .ToList();
         opciones.Add("Cancelar");
         var sel = Choice("Selecciona el mecánico:", opciones.ToArray());
         if (sel.Contains("Cancelar")) return;
 
-        var empleado = empleados.Items[opciones.IndexOf(sel)];
-        if (!Confirm($"Asignar [{empleado.NombreCompleto}] a [{orden.NumeroOrden}]?")) return;
+        var empleado = mecanicos[opciones.IndexOf(sel)];
+        if (!Confirm($"Asignar {empleado.NombreCompleto} ({empleado.Especialidad ?? "Sin especialidad"}) a la orden {orden.NumeroOrden}?")) return;
 
         var (ok, error) = (false, "");
         await WithSpinner("Asignando", async () => { (ok, error) = await Api.AsignarMecanicoAsync(orden.Id, empleado.Id); });
@@ -338,7 +347,7 @@ public class OrdenesMenu : BaseMenu
         if (data == null || data.Items.Count == 0) { NoData("No se encontraron órdenes."); Pause(); return null; }
 
         var opciones = data.Items
-            .Select(o => $"[{o.EstadoColor}]{o.NumeroOrden}[/]  {o.ClienteNombre ?? "-"}  |  {o.VehiculoPlaca ?? "-"}  |  {o.EstadoTexto}")
+            .Select(o => $"[{o.EstadoColor}]{Markup.Escape(o.NumeroOrden ?? "-")}[/]  {Markup.Escape(o.ClienteNombre ?? "-")}  |  {Markup.Escape(o.VehiculoPlaca ?? "-")}  |  {Markup.Escape(o.EstadoTexto ?? "-")}")
             .ToList();
         opciones.Add("Cancelar");
 
@@ -352,4 +361,13 @@ public class OrdenesMenu : BaseMenu
         if (sel == "Cancelar") return null;
         return data.Items[opciones.IndexOf(sel)];
     }
+
+    private static string TipoMecLabel(int tipo) => tipo switch
+    {
+        0 => "Mecánico",
+        1 => "Eléctrico",
+        5 => "Diagnóstico",
+        6 => "Área",
+        _ => "Técnico"
+    };
 }

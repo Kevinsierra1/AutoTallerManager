@@ -346,7 +346,7 @@ public class InventarioMenu : BaseMenu
         }
 
         var opciones = data.Items
-            .Select(r => $"[cyan]{r.Codigo}[/]  {Markup.Escape(r.Nombre)}  (stock: {r.StockActual})")
+            .Select(r => $"[cyan]{Markup.Escape(r.Codigo ?? "-")}[/]  {Markup.Escape(r.Nombre)}  (stock: {r.StockActual})")
             .ToList();
         opciones.Add("Cancelar");
 

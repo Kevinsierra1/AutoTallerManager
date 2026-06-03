@@ -231,7 +231,17 @@ public class MarcaModel { public Guid Id { get; set; } public string Nombre { ge
 public class ModeloModel { public Guid Id { get; set; } public string Nombre { get; set; } = ""; public Guid MarcaId { get; set; } }
 public class ColorModel { public Guid Id { get; set; } public string Nombre { get; set; } = ""; }
 public class CategoriaRepuestoModel { public Guid Id { get; set; } public string Nombre { get; set; } = ""; }
-public class EmpleadoModel { public Guid Id { get; set; } public string Nombres { get; set; } = ""; public string Apellidos { get; set; } = ""; public string NombreCompleto => $"{Nombres} {Apellidos}"; }
+public class EmpleadoModel
+{
+    public Guid Id { get; set; }
+    public string Nombres { get; set; } = "";
+    public string Apellidos { get; set; } = "";
+    public string NombreCompleto => $"{Nombres} {Apellidos}";
+    public int TipoEmpleado { get; set; }
+    public string? Especialidad { get; set; }
+    public bool Activo { get; set; } = true;
+    public DateTime CreadoEn { get; set; }
+}
 
 // ─── Mini-Órdenes ─────────────────────────────────────────────────────────────
 

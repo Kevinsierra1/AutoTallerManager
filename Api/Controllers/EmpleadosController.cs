@@ -10,7 +10,7 @@ namespace Api.Controllers;
 /// <summary>Gestión de Empleados</summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class EmpleadosController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -18,6 +18,7 @@ public class EmpleadosController : ControllerBase
 
     /// <summary>Obtiene lista de empleados</summary>
     [HttpGet]
+    [Authorize(Roles = "Admin,JefeTaller,Recepcionista,Mecánico,MecanicoDiagnostico,MecanicoArea")]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<EmpleadoDto>>), 200)]
     public async Task<IActionResult> GetAll([FromQuery] TipoEmpleadoEnum? tipo, int pageNumber = 1, int pageSize = 10, CancellationToken ct = default)
     {
@@ -28,6 +29,7 @@ public class EmpleadosController : ControllerBase
 
     /// <summary>Obtiene un empleado por ID</summary>
     [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Admin,JefeTaller,Recepcionista,Mecánico,MecanicoDiagnostico,MecanicoArea")]
     [ProducesResponseType(typeof(ApiResponse<EmpleadoDto>), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
@@ -38,6 +40,7 @@ public class EmpleadosController : ControllerBase
 
     /// <summary>Registra un nuevo empleado</summary>
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<EmpleadoDto>), 201)]
     public async Task<IActionResult> Create([FromBody] CreateEmpleadoDto dto, CancellationToken ct)
     {
@@ -47,6 +50,7 @@ public class EmpleadosController : ControllerBase
 
     /// <summary>Actualiza un empleado</summary>
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<EmpleadoDto>), 200)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateEmpleadoDto dto, CancellationToken ct)
     {
@@ -56,6 +60,7 @@ public class EmpleadosController : ControllerBase
 
     /// <summary>Elimina un empleado (soft delete)</summary>
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
