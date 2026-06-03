@@ -21,7 +21,10 @@ public class UpdateCitaCommandHandler : IRequestHandler<UpdateCitaCommand, CitaD
 
     public async Task<CitaDto> Handle(UpdateCitaCommand request, CancellationToken cancellationToken)
     {
-        var cita = await _context.Citas.FindAsync([request.Id], cancellationToken)
+        var cita = await _context.Citas
+            .Include(c => c.Cliente)
+            .Include(c => c.Vehiculo)
+            .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken)
             ?? throw new NotFoundException("Cita", request.Id);
         _mapper.Map(request.Dto, cita);
         await _context.SaveChangesAsync(cancellationToken);

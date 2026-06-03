@@ -83,4 +83,44 @@ public class OrdenesController : ControllerBase
         await _mediator.Send(new CancelarOrdenCommand(id, motivo), ct);
         return NoContent();
     }
+
+    /// <summary>Agrega un repuesto/insumo a la orden</summary>
+    [HttpPost("{id:guid}/detalles")]
+    [Authorize(Policy = "MecanicoOJefe")]
+    [ProducesResponseType(typeof(ApiResponse<DetalleOrdenDto>), 201)]
+    public async Task<IActionResult> AddDetalle(Guid id, [FromBody] CreateDetalleOrdenDto dto, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new AddDetalleOrdenCommand(id, dto), ct);
+        return CreatedAtAction(nameof(GetById), new { id }, ApiResponse<DetalleOrdenDto>.Success(result));
+    }
+
+    /// <summary>Elimina un repuesto/insumo de la orden</summary>
+    [HttpDelete("{id:guid}/detalles/{detalleId:guid}")]
+    [Authorize(Policy = "MecanicoOJefe")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> RemoveDetalle(Guid id, Guid detalleId, CancellationToken ct)
+    {
+        await _mediator.Send(new RemoveDetalleOrdenCommand(id, detalleId), ct);
+        return NoContent();
+    }
+
+    /// <summary>Agrega mano de obra a la orden</summary>
+    [HttpPost("{id:guid}/manos-obra")]
+    [Authorize(Policy = "MecanicoOJefe")]
+    [ProducesResponseType(typeof(ApiResponse<ManoObraOrdenDto>), 201)]
+    public async Task<IActionResult> AddManoObra(Guid id, [FromBody] CreateManoObraOrdenDto dto, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new AddManoObraOrdenCommand(id, dto), ct);
+        return CreatedAtAction(nameof(GetById), new { id }, ApiResponse<ManoObraOrdenDto>.Success(result));
+    }
+
+    /// <summary>Elimina una mano de obra de la orden</summary>
+    [HttpDelete("{id:guid}/manos-obra/{manoObraId:guid}")]
+    [Authorize(Policy = "MecanicoOJefe")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> RemoveManoObra(Guid id, Guid manoObraId, CancellationToken ct)
+    {
+        await _mediator.Send(new RemoveManoObraOrdenCommand(id, manoObraId), ct);
+        return NoContent();
+    }
 }

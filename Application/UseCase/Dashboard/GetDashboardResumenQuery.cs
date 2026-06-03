@@ -14,7 +14,7 @@ public class GetDashboardResumenQueryHandler : IRequestHandler<GetDashboardResum
 
     public async Task<DashboardResumenDto> Handle(GetDashboardResumenQuery request, CancellationToken cancellationToken)
     {
-        var inicio = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var inicio = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         var totalClientes = await _context.Clientes.CountAsync(cancellationToken);
         var totalVehiculos = await _context.Vehiculos.CountAsync(cancellationToken);

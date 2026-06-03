@@ -152,7 +152,7 @@ public class CatalogosController : ControllerBase
 
     /// <summary>Lista los permisos del sistema, opcionalmente filtrados por módulo</summary>
     [HttpGet("permisos")]
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetPermisos([FromQuery] string? modulo, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetPermisosQuery(modulo), ct);
@@ -163,7 +163,7 @@ public class CatalogosController : ControllerBase
 
     /// <summary>Lista las configuraciones del sistema, opcionalmente filtradas por grupo</summary>
     [HttpGet("configuraciones")]
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetConfiguraciones([FromQuery] string? grupo, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetConfiguracionesQuery(grupo), ct);

@@ -27,3 +27,9 @@ public record SalidaInventarioDto(
     string? Motivo,
     Guid? OrdenServicioId
 );
+
+public record AjusteInventarioDto(
+    Guid RepuestoId,
+    int NuevaCantidad,
+    string Motivo
+);

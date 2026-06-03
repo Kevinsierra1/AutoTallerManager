@@ -27,7 +27,7 @@ public class InventarioController : ControllerBase
 
     /// <summary>Registra entrada de inventario</summary>
     [HttpPost("entrada")]
-    [Authorize(Roles = "Admin,Recepcionista")]
+    [Authorize(Roles = "Admin,Recepcionista,JefeAlmacen,JefeBodega")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> Entrada([FromBody] EntradaInventarioDto dto, CancellationToken ct)
     {
@@ -37,11 +37,21 @@ public class InventarioController : ControllerBase
 
     /// <summary>Registra salida de inventario</summary>
     [HttpPost("salida")]
-    [Authorize(Roles = "Admin,Mecánico,Recepcionista")]
+    [Authorize(Roles = "Admin,Mecánico,Recepcionista,JefeAlmacen,JefeBodega,MecanicoDiagnostico,MecanicoArea")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> Salida([FromBody] SalidaInventarioDto dto, CancellationToken ct)
     {
         await _mediator.Send(new SalidaInventarioCommand(dto), ct);
+        return NoContent();
+    }
+
+    /// <summary>Ajusta el stock de un repuesto al valor indicado</summary>
+    [HttpPost("ajuste")]
+    [Authorize(Roles = "Admin,JefeAlmacen,JefeBodega")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> Ajuste([FromBody] AjusteInventarioDto dto, CancellationToken ct)
+    {
+        await _mediator.Send(new AjusteInventarioCommand(dto.RepuestoId, dto.NuevaCantidad, dto.Motivo), ct);
         return NoContent();
     }
 }

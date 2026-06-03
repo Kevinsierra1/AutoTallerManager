@@ -25,6 +25,7 @@ public class GetOrdenByIdQueryHandler : IRequestHandler<GetOrdenByIdQuery, Orden
             .Include(o => o.Cliente)
             .Include(o => o.Vehiculo)
             .Include(o => o.Mecanico)
+            .Include(o => o.TipoServicio)
             .Include(o => o.DetallesOrdenServicio!)
                 .ThenInclude(d => d.Repuesto)
             .Include(o => o.ManosObra!)

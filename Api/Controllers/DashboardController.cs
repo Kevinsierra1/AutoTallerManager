@@ -45,7 +45,7 @@ public class DashboardController : ControllerBase
 
     /// <summary>Obtiene repuestos con stock crítico</summary>
     [HttpGet("repuestos-criticos")]
-    [Authorize(Roles = "Admin,Recepcionista")]
+    [Authorize(Roles = "Admin,Recepcionista,JefeTaller,Mecánico,MecanicoDiagnostico,MecanicoArea,JefeAlmacen,JefeBodega")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetRepuestosCriticos(int pageNumber = 1, int pageSize = 10, CancellationToken ct = default)
     {

@@ -16,9 +16,11 @@ public class GetDashboardOrdenesQueryHandler : IRequestHandler<GetDashboardOrden
 
     public async Task<List<OrdenEstadisticaDto>> Handle(GetDashboardOrdenesQuery request, CancellationToken cancellationToken)
     {
-        return await _context.OrdenesServicio
+        // Enum.ToString() no es traducible a SQL — traer a memoria y convertir
+        var raw = await _context.OrdenesServicio
             .GroupBy(o => o.Estado)
-            .Select(g => new OrdenEstadisticaDto(g.Key.ToString(), g.Count()))
+            .Select(g => new { Estado = (int)g.Key, Cantidad = g.Count() })
             .ToListAsync(cancellationToken);
+        return raw.Select(x => new OrdenEstadisticaDto(((EstadoOrdenEnum)x.Estado).ToString(), x.Cantidad)).ToList();
     }
 }

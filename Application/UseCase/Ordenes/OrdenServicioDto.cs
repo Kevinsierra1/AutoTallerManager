@@ -42,6 +42,8 @@ public record OrdenServicioDto(
     string? VehiculoPlaca,
     Guid? MecanicoId,
     string? MecanicoNombre,
+    Guid? TipoServicioId,
+    string? TipoServicioNombre,
     EstadoOrdenEnum Estado,
     string? Descripcion,
     DateTime FechaIngreso,

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Application.UseCase.MiniOrdenes;
 using Application.Common;
+using Application.Abstractions;
 using System.Security.Claims;
 
 namespace Api.Controllers;
@@ -14,7 +16,12 @@ namespace Api.Controllers;
 public class MiniOrdenesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    public MiniOrdenesController(IMediator mediator) => _mediator = mediator;
+    private readonly IApplicationDbContext _context;
+    public MiniOrdenesController(IMediator mediator, IApplicationDbContext context)
+    {
+        _mediator = mediator;
+        _context  = context;
+    }
 
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? Guid.Empty.ToString());
@@ -49,13 +56,22 @@ public class MiniOrdenesController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<MiniOrdenDto>), 201)]
     public async Task<IActionResult> Create([FromBody] CreatePresupuestoDto dto, CancellationToken ct)
     {
-        // Pasar null si el usuario actual no está en la tabla Empleados (Admin, JefeTaller)
-        // El FK en MiniOrdenes.MecanicoId es nullable — no fuerza un Empleado válido.
+        // Buscar el Empleado cuyo email coincide con el del usuario actual.
+        // Los Empleados y Usuarios son entidades separadas; no comparten ID.
         Guid? mecanicoId = null;
-        // Intentar resolver solo si el usuario tiene rol de mecánico
-        var roles = User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value);
+        var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value);
         if (roles.Any(r => r is "Mecánico" or "MecanicoDiagnostico" or "MecanicoArea"))
-            mecanicoId = CurrentUserId; // El handler lo guarda pero no valida FK si es null
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (!string.IsNullOrEmpty(email))
+            {
+                var emp = await _context.Empleados
+                    .Where(e => e.Email == email && e.Activo)
+                    .Select(e => new { e.Id })
+                    .FirstOrDefaultAsync(ct);
+                mecanicoId = emp?.Id;
+            }
+        }
 
         var result = await _mediator.Send(new CreateMiniOrdenCommand(dto, mecanicoId), ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<MiniOrdenDto>.Success(result));
@@ -104,5 +120,45 @@ public class MiniOrdenesController : ControllerBase
     {
         var result = await _mediator.Send(new CompletarMiniOrdenCommand(id, observacion), ct);
         return Ok(ApiResponse<MiniOrdenDto>.Success(result));
+    }
+
+    /// <summary>Agrega un repuesto al presupuesto</summary>
+    [HttpPost("{id:guid}/detalles")]
+    [Authorize(Policy = "MecanicoOnly")]
+    [ProducesResponseType(typeof(ApiResponse<MiniOrdenDetalleDto>), 201)]
+    public async Task<IActionResult> AddDetalle(Guid id, [FromBody] CreateMiniOrdenDetalleDto dto, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new AddDetalleMiniOrdenCommand(id, dto), ct);
+        return CreatedAtAction(nameof(GetById), new { id }, ApiResponse<MiniOrdenDetalleDto>.Success(result));
+    }
+
+    /// <summary>Elimina un repuesto del presupuesto</summary>
+    [HttpDelete("{id:guid}/detalles/{detalleId:guid}")]
+    [Authorize(Policy = "MecanicoOnly")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> RemoveDetalle(Guid id, Guid detalleId, CancellationToken ct)
+    {
+        await _mediator.Send(new RemoveDetalleMiniOrdenCommand(id, detalleId), ct);
+        return NoContent();
+    }
+
+    /// <summary>Agrega mano de obra al presupuesto</summary>
+    [HttpPost("{id:guid}/manos-obra")]
+    [Authorize(Policy = "MecanicoOnly")]
+    [ProducesResponseType(typeof(ApiResponse<MiniOrdenManoObraDto>), 201)]
+    public async Task<IActionResult> AddManoObra(Guid id, [FromBody] CreateMiniOrdenManoObraDto dto, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new AddManoObraMiniOrdenCommand(id, dto), ct);
+        return CreatedAtAction(nameof(GetById), new { id }, ApiResponse<MiniOrdenManoObraDto>.Success(result));
+    }
+
+    /// <summary>Elimina mano de obra del presupuesto</summary>
+    [HttpDelete("{id:guid}/manos-obra/{manoObraId:guid}")]
+    [Authorize(Policy = "MecanicoOnly")]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> RemoveManoObra(Guid id, Guid manoObraId, CancellationToken ct)
+    {
+        await _mediator.Send(new RemoveManoObraMiniOrdenCommand(id, manoObraId), ct);
+        return NoContent();
     }
 }

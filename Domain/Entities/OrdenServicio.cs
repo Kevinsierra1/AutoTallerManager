@@ -11,6 +11,8 @@ public class OrdenServicio : BaseEntity
     public Vehiculo Vehiculo { get; set; } = null!;
     public Guid? MecanicoId { get; set; }
     public Empleado? Mecanico { get; set; }
+    public Guid? TipoServicioId { get; set; }
+    public TipoServicio? TipoServicio { get; set; }
     public Guid? PrioridadOrdenId { get; set; }
     public PrioridadOrden? PrioridadOrden { get; set; }
     public EstadoOrdenEnum Estado { get; set; } = EstadoOrdenEnum.Pendiente;

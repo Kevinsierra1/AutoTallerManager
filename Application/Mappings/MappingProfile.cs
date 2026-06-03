@@ -42,12 +42,15 @@ public class MappingProfile : Profile
             .ForCtorParam("ClienteNombre", o => o.MapFrom(s => s.Cliente != null ? $"{s.Cliente.Nombres} {s.Cliente.Apellidos}" : null))
             .ForCtorParam("VehiculoPlaca", o => o.MapFrom(s => s.Vehiculo != null ? s.Vehiculo.Placa : null));
         CreateMap<CreateCitaDto, Cita>();
+        CreateMap<UpdateCitaDto, Cita>()
+            .ForAllMembers(o => o.Condition((src, dest, val) => val != null));
 
         // Ordenes
         CreateMap<OrdenServicio, OrdenServicioDto>()
             .ForCtorParam("ClienteNombre", o => o.MapFrom(s => s.Cliente != null ? $"{s.Cliente.Nombres} {s.Cliente.Apellidos}" : null))
             .ForCtorParam("VehiculoPlaca", o => o.MapFrom(s => s.Vehiculo != null ? s.Vehiculo.Placa : null))
             .ForCtorParam("MecanicoNombre", o => o.MapFrom(s => s.Mecanico != null ? $"{s.Mecanico.Nombres} {s.Mecanico.Apellidos}" : null))
+            .ForCtorParam("TipoServicioNombre", o => o.MapFrom(s => s.TipoServicio != null ? s.TipoServicio.Nombre : null))
             .ForCtorParam("Detalles", o => o.MapFrom(s => (List<DetalleOrdenDto>?)null))
             .ForCtorParam("ManosObra", o => o.MapFrom(s => (List<ManoObraOrdenDto>?)null));
         CreateMap<CreateOrdenDto, OrdenServicio>()

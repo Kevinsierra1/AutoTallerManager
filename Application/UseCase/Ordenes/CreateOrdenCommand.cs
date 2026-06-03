@@ -30,6 +30,7 @@ public class CreateOrdenCommandHandler : IRequestHandler<CreateOrdenCommand, Ord
             ClienteId = request.Dto.ClienteId,
             VehiculoId = request.Dto.VehiculoId,
             Descripcion = request.Dto.Descripcion,
+            TipoServicioId = request.Dto.TipoServicioId,
             Estado = EstadoOrdenEnum.Pendiente,
             FechaIngreso = DateTime.UtcNow
         };
