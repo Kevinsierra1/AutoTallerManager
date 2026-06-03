@@ -1,6 +1,7 @@
 using MediatR;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Application.Extensions;
 using Application.Common;
@@ -25,7 +26,12 @@ public class GetRepuestosQueryHandler : IRequestHandler<GetRepuestosQuery, Paged
         var q = _context.Repuestos.AsQueryable();
         var f = request.Filtro;
         if (!string.IsNullOrWhiteSpace(f.Busqueda))
-            q = q.Where(x => x.Nombre.Contains(f.Busqueda) || x.Codigo.Contains(f.Busqueda));
+        {
+            var patron = $"%{f.Busqueda.Trim()}%";
+            q = q.Where(x => EF.Functions.ILike(x.Nombre, patron)
+                           || EF.Functions.ILike(x.Codigo, patron)
+                           || (x.Descripcion != null && EF.Functions.ILike(x.Descripcion, patron)));
+        }
         if (f.CategoriaId.HasValue) q = q.Where(x => x.CategoriaRepuestoId == f.CategoriaId);
         if (f.StockCritico == true) q = q.Where(x => x.StockActual <= x.StockMinimo);
         if (f.Activo.HasValue) q = q.Where(x => x.Activo == f.Activo);

@@ -39,6 +39,7 @@ public record VehiculoFiltroDto(
     string? Placa,
     string? Vin,
     Guid? MarcaId,
+    Guid? ClienteId,
     bool? Activo,
     int PageNumber = 1,
     int PageSize = 10

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Exceptions;
 
 namespace Application.UseCase.Ordenes;
 
@@ -22,6 +23,14 @@ public class CreateOrdenCommandHandler : IRequestHandler<CreateOrdenCommand, Ord
 
     public async Task<OrdenServicioDto> Handle(CreateOrdenCommand request, CancellationToken cancellationToken)
     {
+        // Validar que el vehículo pertenece al cliente seleccionado
+        var perteneceAlCliente = await _context.VehiculoPropietarios
+            .AnyAsync(vp => vp.VehiculoId == request.Dto.VehiculoId
+                         && vp.ClienteId  == request.Dto.ClienteId
+                         && vp.Activo, cancellationToken);
+        if (!perteneceAlCliente)
+            throw new Domain.Exceptions.DomainException("El vehículo no está registrado a nombre del cliente seleccionado.");
+
         var orden = new OrdenServicio
         {
             Id = Guid.NewGuid(),

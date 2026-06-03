@@ -36,37 +36,64 @@ public class AprobarRechazarClienteCommandHandler : IRequestHandler<AprobarRecha
             m.Estado = EstadoMiniOrden.AprobadaCliente;
             m.FechaAprobacionCliente = DateTime.UtcNow;
 
-            // ── Crear la Orden de Servicio automáticamente ─────────────────
-            var contador = await _context.OrdenesServicio.CountAsync(cancellationToken);
-            var nuevaOrden = new OrdenServicio
+            // ── Buscar una OS existente del mismo cliente+vehículo aprobada hoy ──
+            // para consolidar todos los servicios aprobados en UNA sola orden.
+            var hoy = DateTime.UtcNow.Date;
+            var osIdExistente = await _context.MiniOrdenes
+                .Where(mo => mo.ClienteId  == m.ClienteId
+                          && mo.VehiculoId == m.VehiculoId
+                          && mo.Id         != m.Id
+                          && mo.OrdenServicioId.HasValue
+                          && mo.Estado == EstadoMiniOrden.EnProceso
+                          && mo.FechaAprobacionCliente.HasValue
+                          && mo.FechaAprobacionCliente.Value >= hoy)
+                .Select(mo => mo.OrdenServicioId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            Guid ordenId;
+
+            if (osIdExistente.HasValue)
             {
-                Id = Guid.NewGuid(),
-                NumeroOrden = $"OS-{DateTime.UtcNow:yyyyMMdd}-{contador + 1:D4}",
-                ClienteId = m.ClienteId,
-                VehiculoId = m.VehiculoId,
-                MecanicoId = m.MecanicoId,
-                Estado = EstadoOrdenEnum.Aprobada,
-                Descripcion = m.Descripcion,
-                FechaIngreso = DateTime.UtcNow,
-                CreadoEn = DateTime.UtcNow
-            };
+                // Reusar la OS existente — agregar descripción de este servicio
+                ordenId = osIdExistente.Value;
+                var osExistente = await _context.OrdenesServicio
+                    .FirstOrDefaultAsync(os => os.Id == ordenId, cancellationToken);
+                if (osExistente != null)
+                    osExistente.Descripcion += $"\n• {m.Descripcion}";
+            }
+            else
+            {
+                // Crear una nueva OS que consolidará todos los servicios
+                var contador = await _context.OrdenesServicio.CountAsync(cancellationToken);
+                var nuevaOrden = new OrdenServicio
+                {
+                    Id          = Guid.NewGuid(),
+                    NumeroOrden = $"OS-{DateTime.UtcNow:yyyyMMdd}-{contador + 1:D4}",
+                    ClienteId   = m.ClienteId,
+                    VehiculoId  = m.VehiculoId,
+                    MecanicoId  = m.MecanicoId,
+                    Estado      = EstadoOrdenEnum.Aprobada,
+                    Descripcion = m.Descripcion,
+                    FechaIngreso = DateTime.UtcNow,
+                    CreadoEn    = DateTime.UtcNow
+                };
+                _context.OrdenesServicio.Add(nuevaOrden);
+                ordenId = nuevaOrden.Id;
 
-            _context.OrdenesServicio.Add(nuevaOrden);
+                _context.HistorialEstadosOrden.Add(new HistorialEstadoOrden
+                {
+                    Id              = Guid.NewGuid(),
+                    OrdenServicioId = ordenId,
+                    Estado          = EstadoOrdenEnum.Aprobada,
+                    Observaciones   = $"Orden generada desde presupuesto {m.NumeroMiniOrden} aprobado por {request.ClienteNombre}",
+                    FechaHora       = DateTime.UtcNow,
+                    CreadoEn        = DateTime.UtcNow
+                });
+            }
 
-            // Vinculamos el presupuesto a la OS recién creada
-            m.OrdenServicioId = nuevaOrden.Id;
-            m.Estado = EstadoMiniOrden.EnProceso;
+            m.OrdenServicioId = ordenId;
+            m.Estado     = EstadoMiniOrden.EnProceso;
             m.FechaInicio = DateTime.UtcNow;
-
-            _context.HistorialEstadosOrden.Add(new HistorialEstadoOrden
-            {
-                Id = Guid.NewGuid(),
-                OrdenServicioId = nuevaOrden.Id,
-                Estado = EstadoOrdenEnum.Aprobada,
-                Observaciones = $"Orden generada desde presupuesto {m.NumeroMiniOrden} aprobado por {request.ClienteNombre}",
-                FechaHora = DateTime.UtcNow,
-                CreadoEn = DateTime.UtcNow
-            });
         }
         else
         {

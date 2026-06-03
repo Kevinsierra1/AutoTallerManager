@@ -21,7 +21,12 @@ public class GetUsuariosQueryHandler : IRequestHandler<GetUsuariosQuery, PagedRe
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(f.Busqueda))
-            q = q.Where(u => u.Email.Contains(f.Busqueda) || u.Nombres.Contains(f.Busqueda) || u.Apellidos.Contains(f.Busqueda));
+        {
+            var patron = $"%{f.Busqueda.Trim()}%";
+            q = q.Where(u => EF.Functions.ILike(u.Email,     patron)
+                           || EF.Functions.ILike(u.Nombres,   patron)
+                           || EF.Functions.ILike(u.Apellidos, patron));
+        }
         if (f.Activo.HasValue)
             q = q.Where(u => u.Activo == f.Activo.Value);
         if (!string.IsNullOrWhiteSpace(f.Rol))

@@ -169,4 +169,14 @@ public class CatalogosController : ControllerBase
         var result = await _mediator.Send(new GetConfiguracionesQuery(grupo), ct);
         return Ok(ApiResponse<List<ConfiguracionItemDto>>.Success(result));
     }
+
+    /// <summary>Actualiza el valor de una configuración del sistema</summary>
+    [HttpPut("configuraciones/{clave}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<ConfiguracionItemDto>), 200)]
+    public async Task<IActionResult> UpdateConfiguracion(string clave, [FromBody] UpdateConfiguracionDto dto, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new UpdateConfiguracionCommand(clave, dto.Valor), ct);
+        return Ok(ApiResponse<ConfiguracionItemDto>.Success(result));
+    }
 }

@@ -11,7 +11,7 @@ public record ModeloItemDto(Guid Id, string Nombre, Guid MarcaId, string MarcaNo
 public record ColorItemDto(Guid Id, string Nombre, string? CodigoHex);
 public record EstadoOrdenItemDto(Guid Id, string Nombre, int Codigo, string? Descripcion);
 public record PrioridadOrdenItemDto(Guid Id, string Nombre, int Nivel, string? Descripcion);
-public record ConfiguracionItemDto(Guid Id, string Clave, string Valor, string Tipo, string? Grupo);
+public record ConfiguracionItemDto(Guid Id, string Clave, string Valor, string Tipo, string? Grupo, string? Descripcion, bool EsEditable);
 
 // ── Marcas ────────────────────────────────────────────────────────────────────
 
@@ -193,7 +193,7 @@ public class GetConfiguracionesQueryHandler : IRequestHandler<GetConfiguraciones
         if (!string.IsNullOrEmpty(request.Grupo))
             q = q.Where(c => c.Grupo == request.Grupo);
         return await q.OrderBy(c => c.Grupo).ThenBy(c => c.Clave)
-            .Select(c => new ConfiguracionItemDto(c.Id, c.Clave, c.Valor, c.Tipo, c.Grupo))
+            .Select(c => new ConfiguracionItemDto(c.Id, c.Clave, c.Valor, c.Tipo, c.Grupo, c.Descripcion, c.Activo))
             .ToListAsync(ct);
     }
 }
@@ -289,3 +289,5 @@ public class GetPermisosQueryHandler : IRequestHandler<GetPermisosQuery, List<Pe
             .ToListAsync(ct);
     }
 }
+
+public record UpdateConfiguracionDto(string Valor);

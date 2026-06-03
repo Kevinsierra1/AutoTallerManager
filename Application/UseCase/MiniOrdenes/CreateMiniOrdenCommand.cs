@@ -24,6 +24,14 @@ public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenComm
         _ = await _context.Vehiculos.FindAsync([dto.VehiculoId], cancellationToken)
             ?? throw new NotFoundException("Vehículo", dto.VehiculoId);
 
+        // Validar que el vehículo pertenece al cliente seleccionado
+        var perteneceAlCliente = await _context.VehiculoPropietarios
+            .AnyAsync(vp => vp.VehiculoId == dto.VehiculoId
+                         && vp.ClienteId  == dto.ClienteId
+                         && vp.Activo, cancellationToken);
+        if (!perteneceAlCliente)
+            throw new Domain.Exceptions.DomainException("El vehículo no está registrado a nombre del cliente seleccionado.");
+
         var contador = await _context.MiniOrdenes.CountAsync(cancellationToken);
         var presupuesto = new MiniOrden
         {

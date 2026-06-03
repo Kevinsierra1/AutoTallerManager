@@ -1,6 +1,7 @@
 using MediatR;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Application.Extensions;
 using Application.Common;
@@ -26,11 +27,18 @@ public class GetClientesQueryHandler : IRequestHandler<GetClientesQuery, PagedRe
         var f = request.Filtro;
         if (!string.IsNullOrWhiteSpace(f.Busqueda))
         {
-            var busqueda = f.Busqueda.TrimStart('#');
-            if (int.TryParse(busqueda, out var numero))
-                q = q.Where(c => c.Numero == numero || c.Nombres.Contains(f.Busqueda) || c.Apellidos.Contains(f.Busqueda) || c.NumeroDocumento.Contains(f.Busqueda));
+            var raw    = f.Busqueda.Trim().TrimStart('#');
+            var patron = $"%{raw}%";
+            if (int.TryParse(raw, out var numero))
+                q = q.Where(c => c.Numero == numero
+                    || EF.Functions.ILike(c.Nombres,         patron)
+                    || EF.Functions.ILike(c.Apellidos,       patron)
+                    || EF.Functions.ILike(c.NumeroDocumento, patron));
             else
-                q = q.Where(c => c.Nombres.Contains(f.Busqueda) || c.Apellidos.Contains(f.Busqueda) || c.NumeroDocumento.Contains(f.Busqueda));
+                q = q.Where(c => EF.Functions.ILike(c.Nombres,         patron)
+                    || EF.Functions.ILike(c.Apellidos,       patron)
+                    || EF.Functions.ILike(c.NumeroDocumento, patron)
+                    || (c.Email != null && EF.Functions.ILike(c.Email,  patron)));
         }
         if (!string.IsNullOrWhiteSpace(f.TipoDocumento))
             q = q.Where(c => c.TipoDocumento != null && c.TipoDocumento.Nombre == f.TipoDocumento);

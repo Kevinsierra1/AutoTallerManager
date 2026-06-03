@@ -19,7 +19,12 @@ public class GetProveedoresQueryHandler : IRequestHandler<GetProveedoresQuery, P
         var q = _context.Proveedores.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(f.Busqueda))
-            q = q.Where(p => p.Nombre.Contains(f.Busqueda) || (p.Nit != null && p.Nit.Contains(f.Busqueda)) || (p.Email != null && p.Email.Contains(f.Busqueda)));
+        {
+            var patron = $"%{f.Busqueda.Trim()}%";
+            q = q.Where(p => EF.Functions.ILike(p.Nombre, patron)
+                           || (p.Nit   != null && EF.Functions.ILike(p.Nit,   patron))
+                           || (p.Email != null && EF.Functions.ILike(p.Email, patron)));
+        }
         if (f.Activo.HasValue)
             q = q.Where(p => p.Activo == f.Activo.Value);
 
