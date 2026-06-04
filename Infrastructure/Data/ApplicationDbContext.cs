@@ -78,6 +78,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Factura> Facturas => Set<Factura>();
     public DbSet<DetalleFactura> DetalleFacturas => Set<DetalleFactura>();
     public DbSet<Pago> Pagos => Set<Pago>();
+    public DbSet<SolicitudPago> SolicitudesPago => Set<SolicitudPago>();
     public DbSet<ImpuestoFactura> ImpuestosFacturas => Set<ImpuestoFactura>();
 
     // ── Auditoría y configuración ───────────────────────────────────────────────

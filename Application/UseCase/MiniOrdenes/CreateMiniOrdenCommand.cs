@@ -70,6 +70,29 @@ public class CreateMiniOrdenCommandHandler : IRequestHandler<CreateMiniOrdenComm
         }
 
         decimal totalMO = 0;
+
+        // Si el tipo de servicio tiene precio base, agregarlo automáticamente como mano de obra
+        if (dto.TipoServicioId.HasValue)
+        {
+            var tipoServicio = await _context.TiposServicio
+                .FirstOrDefaultAsync(t => t.Id == dto.TipoServicioId.Value && t.Activo, cancellationToken);
+            if (tipoServicio?.PrecioBase > 0)
+            {
+                presupuesto.ManosObra ??= new List<MiniOrdenManoObra>();
+                var precioBase = tipoServicio.PrecioBase!.Value;
+                totalMO += precioBase;
+                ((List<MiniOrdenManoObra>)presupuesto.ManosObra).Add(new MiniOrdenManoObra
+                {
+                    Id          = Guid.NewGuid(),
+                    Descripcion = $"Mano de obra — {tipoServicio.Nombre}",
+                    HorasTrabajo = 1,
+                    TarifaHora   = precioBase,
+                    Total        = precioBase,
+                    CreadoEn     = DateTime.UtcNow
+                });
+            }
+        }
+
         if (dto.ManosObra?.Count > 0)
         {
             presupuesto.ManosObra = new List<MiniOrdenManoObra>();

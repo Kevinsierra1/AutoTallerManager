@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260604000345_MetodoPagoEnFactura")]
+    partial class MetodoPagoEnFactura
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1151,7 +1154,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid?>("OrdenServicioId")
+                    b.Property<Guid>("OrdenServicioId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("Pagada")
@@ -2299,9 +2302,6 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Estado")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("FacturaId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime?>("FechaFin")
                         .HasColumnType("timestamp with time zone");
 
@@ -2332,8 +2332,6 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
-
-                    b.HasIndex("FacturaId");
 
                     b.HasIndex("MecanicoId");
 
@@ -3165,74 +3163,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("SolicitudInventarioId");
 
                     b.ToTable("SolicitudInventarioDetalles", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Entities.SolicitudPago", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ActualizadoEn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ActualizadoPor")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ClienteId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ConfirmadoPor")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreadoEn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreadoPor")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("EliminadoEn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Estado")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("FacturaId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("FechaConfirmacion")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("FechaSolicitud")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Monto")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("Observaciones")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Referencia")
-                        .HasColumnType("text");
-
-                    b.Property<string>("TipoPago")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Token")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClienteId");
-
-                    b.HasIndex("FacturaId");
-
-                    b.ToTable("SolicitudesPago");
                 });
 
             modelBuilder.Entity("Domain.Entities.TelefonoCliente", b =>
@@ -4268,7 +4198,9 @@ namespace Infrastructure.Migrations
 
                     b.HasOne("Domain.Entities.OrdenServicio", "OrdenServicio")
                         .WithMany()
-                        .HasForeignKey("OrdenServicioId");
+                        .HasForeignKey("OrdenServicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Cliente");
 
@@ -4564,10 +4496,6 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Factura", "Factura")
-                        .WithMany("Ordenes")
-                        .HasForeignKey("FacturaId");
-
                     b.HasOne("Domain.Entities.Empleado", "Mecanico")
                         .WithMany("OrdenesAsignadas")
                         .HasForeignKey("MecanicoId");
@@ -4588,8 +4516,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Cliente");
-
-                    b.Navigation("Factura");
 
                     b.Navigation("Mecanico");
 
@@ -4773,25 +4699,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Repuesto");
 
                     b.Navigation("SolicitudInventario");
-                });
-
-            modelBuilder.Entity("Domain.Entities.SolicitudPago", b =>
-                {
-                    b.HasOne("Domain.Entities.Cliente", "Cliente")
-                        .WithMany()
-                        .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Factura", "Factura")
-                        .WithMany()
-                        .HasForeignKey("FacturaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Cliente");
-
-                    b.Navigation("Factura");
                 });
 
             modelBuilder.Entity("Domain.Entities.TelefonoCliente", b =>
@@ -5000,8 +4907,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Detalles");
 
                     b.Navigation("FacturaImpuestos");
-
-                    b.Navigation("Ordenes");
 
                     b.Navigation("Pagos");
                 });

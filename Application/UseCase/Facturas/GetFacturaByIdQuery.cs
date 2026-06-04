@@ -23,6 +23,8 @@ public class GetFacturaByIdQueryHandler : IRequestHandler<GetFacturaByIdQuery, F
     {
         var factura = await _context.Facturas
             .Include(f => f.Cliente)
+            .Include(f => f.OrdenServicio)
+            .Include(f => f.Ordenes)
             .FirstOrDefaultAsync(f => f.Id == request.Id, cancellationToken)
             ?? throw new NotFoundException("Factura", request.Id);
         return _mapper.Map<FacturaDto>(factura);

@@ -71,7 +71,10 @@ public class MappingProfile : Profile
 
         // Facturas
         CreateMap<Factura, FacturaDto>()
-            .ForCtorParam("ClienteNombre", o => o.MapFrom(s => s.Cliente != null ? $"{s.Cliente.Nombres} {s.Cliente.Apellidos}" : null));
+            .ForCtorParam("ClienteNombre", o => o.MapFrom(s => s.Cliente != null ? $"{s.Cliente.Nombres} {s.Cliente.Apellidos}" : null))
+            .ForCtorParam("NumeroOrden", o => o.MapFrom(s => s.OrdenServicio != null ? s.OrdenServicio.NumeroOrden : (s.Ordenes != null && s.Ordenes.Any() ? s.Ordenes.First().NumeroOrden : null)))
+            .ForCtorParam("NumerosOrdenes", o => o.MapFrom(s => s.Ordenes != null ? s.Ordenes.Select(ord => ord.NumeroOrden).ToList() : new List<string>()))
+            .ForCtorParam("MetodoPago", o => o.MapFrom(s => s.MetodoPago));
 
         // Empleados
         CreateMap<Empleado, EmpleadoDto>();

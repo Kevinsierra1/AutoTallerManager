@@ -1,6 +1,7 @@
 using MediatR;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
 using Application.Abstractions;
 using Application.Extensions;
 using Application.Common;
@@ -23,6 +24,10 @@ public class GetFacturasQueryHandler : IRequestHandler<GetFacturasQuery, PagedRe
     public async Task<PagedResult<FacturaDto>> Handle(GetFacturasQuery request, CancellationToken cancellationToken)
     {
         return await _context.Facturas
+            .Include(f => f.Cliente)
+            .Include(f => f.OrdenServicio)
+            .Include(f => f.Ordenes)
+            .OrderByDescending(f => f.FechaEmision)
             .ProjectTo<FacturaDto>(_mapper.ConfigurationProvider)
             .ToPagedResultAsync(request.PageNumber, request.PageSize, cancellationToken);
     }

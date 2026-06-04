@@ -38,19 +38,31 @@ public class AprobarRechazarClienteCommandHandler : IRequestHandler<AprobarRecha
             m.Estado = EstadoMiniOrden.AprobadaCliente;
             m.FechaAprobacionCliente = DateTime.UtcNow;
 
-            // ── Buscar una OS existente del mismo cliente+vehículo aprobada hoy ──
-            // para consolidar todos los servicios aprobados en UNA sola orden.
-            var hoy = DateTime.UtcNow.Date;
+            // ── Buscar una OS activa del mismo cliente+vehículo para consolidar ──
+            // Nota: NO usar .Date directamente (Kind=Unspecified rompe PostgreSQL timestamp with TZ)
+            var hace24h = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(-24), DateTimeKind.Utc);
             var osIdExistente = await _context.MiniOrdenes
                 .Where(mo => mo.ClienteId  == m.ClienteId
                           && mo.VehiculoId == m.VehiculoId
                           && mo.Id         != m.Id
+                          && !mo.Eliminado
                           && mo.OrdenServicioId.HasValue
                           && mo.Estado == EstadoMiniOrden.EnProceso
                           && mo.FechaAprobacionCliente.HasValue
-                          && mo.FechaAprobacionCliente.Value >= hoy)
+                          && mo.FechaAprobacionCliente.Value >= hace24h)
                 .Select(mo => mo.OrdenServicioId)
                 .FirstOrDefaultAsync(cancellationToken);
+
+            // Verificar que esa OS siga activa (no finalizada ni eliminada)
+            if (osIdExistente.HasValue)
+            {
+                var osActiva = await _context.OrdenesServicio
+                    .AnyAsync(os => os.Id == osIdExistente.Value
+                                 && !os.Eliminado
+                                 && os.Estado != EstadoOrdenEnum.Finalizada
+                                 && os.Estado != EstadoOrdenEnum.Cancelada, cancellationToken);
+                if (!osActiva) osIdExistente = null;
+            }
 
             Guid ordenId;
 
@@ -66,11 +78,10 @@ public class AprobarRechazarClienteCommandHandler : IRequestHandler<AprobarRecha
             else
             {
                 // Crear una nueva OS que consolidará todos los servicios
-                var contador = await _context.OrdenesServicio.CountAsync(cancellationToken);
                 var nuevaOrden = new OrdenServicio
                 {
                     Id           = Guid.NewGuid(),
-                    NumeroOrden  = $"OS-{DateTime.UtcNow:yyyyMMdd}-{contador + 1:D4}",
+                    NumeroOrden  = $"OS-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
                     ClienteId    = m.ClienteId,
                     VehiculoId   = m.VehiculoId,
                     MecanicoId   = m.MecanicoId,

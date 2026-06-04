@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260604003030_SolicitudPago")]
+    partial class SolicitudPago
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1151,7 +1154,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid?>("OrdenServicioId")
+                    b.Property<Guid>("OrdenServicioId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("Pagada")
@@ -2299,9 +2302,6 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Estado")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("FacturaId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime?>("FechaFin")
                         .HasColumnType("timestamp with time zone");
 
@@ -2332,8 +2332,6 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
-
-                    b.HasIndex("FacturaId");
 
                     b.HasIndex("MecanicoId");
 
@@ -4268,7 +4266,9 @@ namespace Infrastructure.Migrations
 
                     b.HasOne("Domain.Entities.OrdenServicio", "OrdenServicio")
                         .WithMany()
-                        .HasForeignKey("OrdenServicioId");
+                        .HasForeignKey("OrdenServicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Cliente");
 
@@ -4564,10 +4564,6 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Factura", "Factura")
-                        .WithMany("Ordenes")
-                        .HasForeignKey("FacturaId");
-
                     b.HasOne("Domain.Entities.Empleado", "Mecanico")
                         .WithMany("OrdenesAsignadas")
                         .HasForeignKey("MecanicoId");
@@ -4588,8 +4584,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Cliente");
-
-                    b.Navigation("Factura");
 
                     b.Navigation("Mecanico");
 
@@ -5000,8 +4994,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Detalles");
 
                     b.Navigation("FacturaImpuestos");
-
-                    b.Navigation("Ordenes");
 
                     b.Navigation("Pagos");
                 });

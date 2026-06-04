@@ -75,6 +75,7 @@ public interface IApplicationDbContext
     DbSet<Factura> Facturas { get; }
     DbSet<DetalleFactura> DetalleFacturas { get; }
     DbSet<Pago> Pagos { get; }
+    DbSet<SolicitudPago> SolicitudesPago { get; }
     DbSet<ImpuestoFactura> ImpuestosFacturas { get; }
 
     // ── Auditoría y configuración ───────────────────────────────────────────────

@@ -3,7 +3,9 @@ namespace Application.UseCase.Facturas;
 public record FacturaDto(
     Guid Id,
     string NumeroFactura,
-    Guid OrdenServicioId,
+    Guid? OrdenServicioId,
+    string? NumeroOrden,           // primera orden (compat)
+    List<string>? NumerosOrdenes,  // todas las órdenes incluidas
     Guid ClienteId,
     string? ClienteNombre,
     decimal Subtotal,
@@ -11,11 +13,21 @@ public record FacturaDto(
     decimal Descuento,
     decimal Total,
     bool Pagada,
+    string? MetodoPago,
     DateTime FechaEmision,
     DateTime CreadoEn
 );
 
+// Factura de una sola orden (legado/compatibilidad)
 public record GenerarFacturaDto(
     Guid OrdenServicioId,
-    decimal Descuento = 0
+    decimal Descuento = 0,
+    string? MetodoPago = null
+);
+
+// Factura consolidada: todas las órdenes finalizadas del cliente
+public record GenerarFacturaConsolidadaDto(
+    Guid ClienteId,
+    decimal Descuento = 0,
+    string? MetodoPago = null
 );

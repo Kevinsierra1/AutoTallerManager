@@ -31,13 +31,25 @@ public class GenerarFacturaCommandHandler : IRequestHandler<GenerarFacturaComman
 
         if (orden.Estado != EstadoOrdenEnum.Finalizada)
             throw new Domain.Exceptions.DomainException("Solo se puede facturar órdenes finalizadas.");
+        if (orden.FacturaId.HasValue)
+            throw new Domain.Exceptions.DomainException("Esta orden ya fue incluida en una factura.");
 
         var subtotalRepuestos = orden.DetallesOrdenServicio?.Sum(d => d.Cantidad * d.PrecioUnitario) ?? 0;
-        var subtotalManoObra = orden.ManosObra?.Sum(m => m.Costo) ?? 0;
-        var subtotal = subtotalRepuestos + subtotalManoObra;
-        var descuento = request.Dto.Descuento;
-        var impuestos = (subtotal - descuento) * 0.19m; // 19% IVA
-        var total = subtotal - descuento + impuestos;
+        var subtotalManoObra  = orden.ManosObra?.Sum(m => m.Costo) ?? 0;
+        var subtotal  = subtotalRepuestos + subtotalManoObra;
+        // Si la orden tiene un Total ya calculado y no hay detalles cargados, usar ese
+        if (subtotal == 0 && orden.Total.HasValue)
+            subtotal = orden.Total.Value;
+        var descuento = Math.Min(request.Dto.Descuento, subtotal); // No puede exceder el subtotal
+        var baseImponible = subtotal - descuento;
+        var impuestos = Math.Round(baseImponible * 0.19m, 2); // 19% IVA
+        var total     = baseImponible + impuestos;
+
+        // Verificar que no se haya facturado ya
+        var yaFacturada = await _context.Facturas
+            .AnyAsync(f => f.OrdenServicioId == orden.Id, cancellationToken);
+        if (yaFacturada)
+            throw new Domain.Exceptions.DomainException("Esta orden ya tiene una factura generada.");
 
         var factura = new Factura
         {
@@ -49,11 +61,23 @@ public class GenerarFacturaCommandHandler : IRequestHandler<GenerarFacturaComman
             Impuestos = impuestos,
             Total = total,
             FechaEmision = DateTime.UtcNow,
-            Pagada = false
+            Pagada = false,
+            MetodoPago = request.Dto.MetodoPago
         };
 
         _context.Facturas.Add(factura);
         await _context.SaveChangesAsync(cancellationToken);
-        return _mapper.Map<FacturaDto>(factura);
+
+        // Recargar con navegaciones para el mapper
+        // Vincular la orden a la factura
+        orden.FacturaId = factura.Id;
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var guardada = await _context.Facturas
+            .Include(f => f.Cliente)
+            .Include(f => f.OrdenServicio)
+            .Include(f => f.Ordenes)
+            .FirstAsync(f => f.Id == factura.Id, cancellationToken);
+        return _mapper.Map<FacturaDto>(guardada);
     }
 }

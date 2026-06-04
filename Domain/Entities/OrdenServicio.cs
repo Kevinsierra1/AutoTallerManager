@@ -21,6 +21,9 @@ public class OrdenServicio : BaseEntity
     public DateTime? FechaFin { get; set; }
     public decimal? Total { get; set; }
     public bool Eliminado { get; set; } = false;
+    // FK hacia la factura que incluye esta orden (null = aún sin facturar)
+    public Guid? FacturaId { get; set; }
+    public Factura? Factura { get; set; }
     public ICollection<DetalleOrdenServicio>? DetallesOrdenServicio { get; set; }
     public ICollection<ManoObra>? ManosObra { get; set; }
     public ICollection<HistorialEstadoOrden>? HistorialEstados { get; set; }
