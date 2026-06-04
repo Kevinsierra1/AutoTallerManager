@@ -58,17 +58,37 @@ public class FacturasController : ControllerBase
     [ProducesResponseType(200)]
     public async Task<IActionResult> OrdenesPendientes(Guid clienteId, CancellationToken ct)
     {
-        var ordenes = await (from o in _context.OrdenesServicio
-                             where o.ClienteId == clienteId
-                               && o.Estado == Domain.Enums.EstadoOrdenEnum.Finalizada
-                               && o.FacturaId == null
-                               && !o.Eliminado
-                             orderby o.FechaIngreso
-                             select new {
-                                 o.Id, o.NumeroOrden, o.Descripcion,
-                                 o.Total, o.FechaIngreso, o.FechaFin
-                             }).ToListAsync(ct);
-        return Ok(ApiResponse<object>.Success(ordenes));
+        // Cargar órdenes con sus detalles para calcular el total real
+        var ordenes = await _context.OrdenesServicio
+            .Include(o => o.DetallesOrdenServicio)
+            .Include(o => o.ManosObra)
+            .Where(o => o.ClienteId == clienteId
+                     && o.Estado == Domain.Enums.EstadoOrdenEnum.Finalizada
+                     && o.FacturaId == null
+                     && !o.Eliminado)
+            .OrderBy(o => o.FechaIngreso)
+            .ToListAsync(ct);
+
+        var resultado = ordenes.Select(o => {
+            // Calcular subtotal desde detalles + mano de obra
+            var subRep = o.DetallesOrdenServicio?.Sum(d => d.Cantidad * d.PrecioUnitario) ?? 0;
+            var subMO  = o.ManosObra?.Sum(m => m.Costo) ?? 0;
+            var calculado = subRep + subMO;
+            // Usar o.Total si no hay detalles desagregados (órdenes heredadas de presupuesto)
+            var total = calculado > 0 ? calculado : (o.Total ?? 0);
+            return new {
+                o.Id,
+                o.NumeroOrden,
+                o.Descripcion,
+                Total       = total,
+                SubRepuestos= subRep,
+                SubManoObra = subMO,
+                o.FechaIngreso,
+                o.FechaFin
+            };
+        }).ToList();
+
+        return Ok(ApiResponse<object>.Success(resultado));
     }
 
     /// <summary>Genera una factura para una orden finalizada</summary>
