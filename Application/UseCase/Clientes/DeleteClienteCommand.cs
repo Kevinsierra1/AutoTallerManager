@@ -1,6 +1,7 @@
 using MediatR;
-using Application.Abstractions;
 using Application.Common.Exceptions;
+using Domain.Entities;
+using Domain.Interfaces;
 
 namespace Application.UseCase.Clientes;
 
@@ -8,15 +9,14 @@ public record DeleteClienteCommand(Guid Id) : IRequest;
 
 public class DeleteClienteCommandHandler : IRequestHandler<DeleteClienteCommand>
 {
-    private readonly IApplicationDbContext _context;
-    public DeleteClienteCommandHandler(IApplicationDbContext context) => _context = context;
+    private readonly IUnitOfWork _uow;
+    public DeleteClienteCommandHandler(IUnitOfWork uow) => _uow = uow;
 
     public async Task Handle(DeleteClienteCommand request, CancellationToken cancellationToken)
     {
-        var cliente = await _context.Clientes.FindAsync([request.Id], cancellationToken)
+        var cliente = await _uow.Repository<Cliente>().ObtenerPorIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Cliente", request.Id);
-        cliente.Eliminado = true;
-        cliente.EliminadoEn = DateTime.UtcNow;
-        await _context.SaveChangesAsync(cancellationToken);
+        _uow.Repository<Cliente>().Eliminar(cliente);
+        await _uow.GuardarCambiosAsync(cancellationToken);
     }
 }

@@ -60,7 +60,7 @@ public class AuthController : ControllerBase
             var inner = ex.InnerException?.Message ?? ex.Message;
             var msg = inner.Contains("23505") || inner.Contains("unique")
                 ? "El email o la placa ya están registrados."
-                : "Error al guardar los datos. Verifica la información e intenta de nuevo.";
+                : inner;
             return BadRequest(ApiResponse<string>.Fail(msg));
         }
     }

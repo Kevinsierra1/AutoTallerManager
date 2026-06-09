@@ -75,7 +75,7 @@ El proyecto sigue **Arquitectura Hexagonal (Ports & Adapters)** combinada con **
 
 ---
 
-## Estructura del proyecto
+## Arquitectura del proyecto
 
 ```
 AutoTallerManager/
@@ -446,12 +446,3 @@ dotnet run --project Api
 ---
 
 *Desarrollado con ASP.NET Core 9 · Arquitectura Hexagonal · CQRS · PostgreSQL*
-
----
-
-## Autores
-
-| Nombre | Rol |
-|--------|-----|
-| **Kevin Santiago Sierra León** | Desarrollo Backend — Arquitectura, API, Base de datos |
-| **Kevin Santiago Pinto Monsalve** | Desarrollo Frontend — Interfaz, UX, Integración |

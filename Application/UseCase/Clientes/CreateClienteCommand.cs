@@ -1,8 +1,8 @@
 using MediatR;
 using AutoMapper;
-using Application.Abstractions;
-using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Domain.Entities;
+using Domain.Interfaces;
 
 namespace Application.UseCase.Clientes;
 
@@ -10,18 +10,18 @@ public record CreateClienteCommand(CreateClienteDto Dto) : IRequest<ClienteCread
 
 public class CreateClienteCommandHandler : IRequestHandler<CreateClienteCommand, ClienteCreadoDto>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
 
-    public CreateClienteCommandHandler(IApplicationDbContext context, IMapper mapper)
+    public CreateClienteCommandHandler(IUnitOfWork uow, IMapper mapper)
     {
-        _context = context;
+        _uow = uow;
         _mapper = mapper;
     }
 
     public async Task<ClienteCreadoDto> Handle(CreateClienteCommand request, CancellationToken cancellationToken)
     {
-        if (await _context.Usuarios.AnyAsync(u => u.Email == request.Dto.Email, cancellationToken))
+        if (await _uow.Repository<Usuario>().ExisteAsync(u => u.Email == request.Dto.Email, cancellationToken))
             throw new Domain.Exceptions.DomainException("El email ya está registrado en el sistema.");
 
         var contrasena = GenerarContrasenaTemporal();
@@ -38,8 +38,8 @@ public class CreateClienteCommandHandler : IRequestHandler<CreateClienteCommand,
             CreadoEn = DateTime.UtcNow
         };
 
-        var rolCliente = await _context.Roles
-            .FirstOrDefaultAsync(r => r.Nombre == "Cliente", cancellationToken);
+        var roles = await _uow.Repository<Rol>().BuscarAsync(r => r.Nombre == "Cliente", cancellationToken);
+        var rolCliente = roles.FirstOrDefault();
         if (rolCliente != null)
         {
             usuario.UsuarioRoles = new List<UsuarioRol>
@@ -48,7 +48,7 @@ public class CreateClienteCommandHandler : IRequestHandler<CreateClienteCommand,
             };
         }
 
-        _context.Usuarios.Add(usuario);
+        await _uow.Repository<Usuario>().AgregarAsync(usuario, cancellationToken);
 
         var cliente = _mapper.Map<Cliente>(request.Dto);
         cliente.Id = Guid.NewGuid();
@@ -57,18 +57,28 @@ public class CreateClienteCommandHandler : IRequestHandler<CreateClienteCommand,
 
         if (!string.IsNullOrEmpty(request.Dto.TipoDocumento))
         {
-            var tipoDoc = await _context.TiposDocumento
-                .FirstOrDefaultAsync(t =>
-                    t.Abreviatura == request.Dto.TipoDocumento ||
-                    t.Nombre == request.Dto.TipoDocumento,
-                    cancellationToken);
-            cliente.TipoDocumentoId = tipoDoc?.Id;
+            var tipos = await _uow.Repository<TipoDocumento>().BuscarAsync(
+                t => t.Abreviatura == request.Dto.TipoDocumento || t.Nombre == request.Dto.TipoDocumento,
+                cancellationToken);
+            cliente.TipoDocumentoId = tipos.FirstOrDefault()?.Id;
         }
 
-        _context.Clientes.Add(cliente);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _uow.Repository<Cliente>().AgregarAsync(cliente, cancellationToken);
 
-        var guardado = await _context.Clientes
+        // Usuario + Cliente se persisten en una sola transacción atómica
+        await _uow.IniciarTransaccionAsync(cancellationToken);
+        try
+        {
+            await _uow.GuardarCambiosAsync(cancellationToken);
+            await _uow.ConfirmarTransaccionAsync(cancellationToken);
+        }
+        catch
+        {
+            await _uow.RevertirTransaccionAsync(cancellationToken);
+            throw;
+        }
+
+        var guardado = await _uow.Repository<Cliente>().Query()
             .Include(c => c.TipoDocumento)
             .FirstAsync(c => c.Id == cliente.Id, cancellationToken);
 
